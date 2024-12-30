@@ -11,26 +11,26 @@ import {
 } from "@/components/ui/sidebar";
 import { Link } from "react-router-dom";
 
-const menuItems = [
+const subjects = [
   {
-    title: "Dashboard",
+    title: "Computer Science",
     url: "/",
     icon: Brain,
   },
   {
-    title: "Links & Articles",
-    url: "/links",
-    icon: LinkIcon,
-  },
-  {
-    title: "Notes",
-    url: "/notes",
+    title: "Mathematics",
+    url: "/math",
     icon: FileText,
   },
   {
-    title: "Flashcards",
-    url: "/flashcards",
+    title: "Physics",
+    url: "/physics",
     icon: Book,
+  },
+  {
+    title: "Languages",
+    url: "/languages",
+    icon: LinkIcon,
   },
 ];
 
@@ -40,16 +40,19 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>
-            <span className="text-mindmosaic-600 font-semibold">MindMosaic</span>
+            <span className="text-mindmosaic-400 font-bold tracking-wider">SUBJECTS</span>
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {subjects.map((subject) => (
+                <SidebarMenuItem key={subject.title}>
                   <SidebarMenuButton asChild>
-                    <Link to={item.url} className="flex items-center gap-2">
-                      <item.icon className="w-5 h-5" />
-                      <span>{item.title}</span>
+                    <Link 
+                      to={subject.url} 
+                      className="folder-tab"
+                    >
+                      <subject.icon className="w-5 h-5" />
+                      <span className="tracking-wide">{subject.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
