@@ -1,4 +1,4 @@
-import { Book, Brain, FileText, Link as LinkIcon } from "lucide-react";
+import { Book, FileText, Brain, Link as LinkIcon } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
