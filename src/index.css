@@ -47,3 +47,18 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes folder-switch {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-folder-switch {
+  animation: folder-switch 0.2s ease-out;
+}
