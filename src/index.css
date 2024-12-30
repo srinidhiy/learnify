@@ -6,17 +6,17 @@
 
 @layer base {
   :root {
-    --background: 260 25% 11%;
+    --background: 230 25% 11%;
     --foreground: 210 40% 98%;
 
-    --card: 260 25% 11%;
+    --card: 230 25% 11%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 260 25% 11%;
+    --popover: 230 25% 11%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 267 84% 81%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 230 25% 11%;
+    --primary-foreground: 210 40% 98%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -24,8 +24,8 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 267 84% 81%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 230 30% 15%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
@@ -35,15 +35,6 @@
     --ring: 224.3 76.3% 48%;
 
     --radius: 0.5rem;
-
-    --sidebar-background: 260 25% 11%;
-    --sidebar-foreground: 267 84% 81%;
-    --sidebar-primary: 267 84% 81%;
-    --sidebar-primary-foreground: 260 25% 11%;
-    --sidebar-accent: 260 30% 15%;
-    --sidebar-accent-foreground: 267 84% 81%;
-    --sidebar-border: 260 30% 15%;
-    --sidebar-ring: 267 84% 81%;
   }
 }
 
@@ -55,22 +46,4 @@
   body {
     @apply bg-background text-foreground;
   }
-}
-
-.folder-tab {
-  @apply relative flex items-center gap-2 px-4 py-2 transition-all duration-200;
-}
-
-.folder-tab::before {
-  content: '';
-  @apply absolute left-0 top-0 h-full w-1 bg-mindmosaic-500 opacity-0 transition-opacity duration-200;
-}
-
-.folder-tab:hover::before,
-.folder-tab[data-active="true"]::before {
-  @apply opacity-100;
-}
-
-.folder-tab[data-active="true"] {
-  @apply bg-mindmosaic-900/50;
 }
