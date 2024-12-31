@@ -62,3 +62,16 @@
 .animate-folder-switch {
   animation: folder-switch 0.2s ease-out;
 }
+
+/* Auth UI Customization */
+.auth-container {
+  @apply space-y-4;
+}
+
+.auth-button {
+  @apply w-full bg-accent hover:bg-accent/90 text-accent-foreground font-medium py-2 px-4 rounded-md transition-colors !important;
+}
+
+.auth-input {
+  @apply w-full bg-primary border-input text-foreground rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent !important;
+}
