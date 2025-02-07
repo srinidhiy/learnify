@@ -11,17 +11,7 @@ const AuthPage = () => {
   useEffect(() => {
     supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('has_onboarded')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile?.has_onboarded) {
-          navigate("/");
-        } else {
-          navigate("/onboarding");
-        }
+        navigate("/");
       }
     });
   }, [navigate]);
@@ -56,6 +46,15 @@ const AuthPage = () => {
           }}
           providers={["google", "github", "apple"]}
           redirectTo={window.location.origin}
+          options={{
+            emailRedirectTo: window.location.origin,
+            additionalSignUpFields: [{
+              key: 'full_name',
+              label: 'Full Name',
+              type: 'text',
+              required: true
+            }]
+          }}
         />
       </div>
     </div>
