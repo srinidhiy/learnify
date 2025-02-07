@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { MainLayout } from "./components/MainLayout";
 import Dashboard from "./pages/Dashboard";
 import AuthPage from "./pages/Auth";
+import OnboardingPage from "./pages/Onboarding";
 import { SidebarProvider } from "./components/ui/sidebar";
 import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
@@ -15,6 +16,7 @@ const queryClient = new QueryClient();
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [hasOnboarded, setHasOnboarded] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -22,6 +24,16 @@ function App() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         setIsAuthenticated(!!session);
+
+        if (session) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('has_onboarded')
+            .eq('id', session.user.id)
+            .single();
+          
+          setHasOnboarded(profile?.has_onboarded ?? false);
+        }
       } catch (error) {
         console.error('Error checking session:', error);
       } finally {
@@ -31,8 +43,17 @@ function App() {
 
     checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setIsAuthenticated(!!session);
+      if (session) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('has_onboarded')
+          .eq('id', session.user.id)
+          .single();
+        
+        setHasOnboarded(profile?.has_onboarded ?? false);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -59,9 +80,25 @@ function App() {
                 }
               />
               <Route
+                path="/onboarding"
+                element={
+                  !isAuthenticated ? (
+                    <Navigate to="/auth" replace />
+                  ) : hasOnboarded ? (
+                    <Navigate to="/" replace />
+                  ) : (
+                    <OnboardingPage />
+                  )
+                }
+              />
+              <Route
                 path="/*"
                 element={
-                  isAuthenticated ? (
+                  !isAuthenticated ? (
+                    <Navigate to="/auth" replace />
+                  ) : !hasOnboarded ? (
+                    <Navigate to="/onboarding" replace />
+                  ) : (
                     <MainLayout>
                       <Routes>
                         <Route path="/" element={<Dashboard />} />
@@ -69,8 +106,6 @@ function App() {
                       <Toaster />
                       <Sonner />
                     </MainLayout>
-                  ) : (
-                    <Navigate to="/auth" replace />
                   )
                 }
               />

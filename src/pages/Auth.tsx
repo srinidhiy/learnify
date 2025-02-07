@@ -25,7 +25,8 @@ const AuthPage = () => {
         </div>
         <Auth
           supabaseClient={supabase}
-          view="sign_in"
+          providers={["google", "github", "apple"]}
+          redirectTo={window.location.origin}
           appearance={{
             theme: ThemeSupa,
             variables: {
@@ -45,8 +46,7 @@ const AuthPage = () => {
               input: 'auth-input',
             }
           }}
-          providers={["google", "github", "apple"]}
-          redirectTo={window.location.origin}
+          view="sign_in"
           showLinks={true}
           additionalData={{
             full_name: {
