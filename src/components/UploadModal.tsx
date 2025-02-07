@@ -31,6 +31,20 @@ export function UploadModal() {
           <DialogTitle>Add New Document</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+
+        <div className="space-y-2">
+            <label className="text-sm font-medium">Topic</label>
+            <Select value={selectedTopic} onValueChange={setSelectedTopic}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a topic" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="coding">Coding</SelectItem>
+                <SelectItem value="economics">Economics</SelectItem>
+                <SelectItem value="design">Design</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">URL</label>
             <div className="relative">
@@ -44,19 +58,7 @@ export function UploadModal() {
             </div>
           </div>
           
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Topic</label>
-            <Select value={selectedTopic} onValueChange={setSelectedTopic}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a topic" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="coding">Coding</SelectItem>
-                <SelectItem value="economics">Economics</SelectItem>
-                <SelectItem value="design">Design</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          
           
           <div className="space-y-2">
             <label className="text-sm font-medium">Or Upload File</label>

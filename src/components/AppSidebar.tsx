@@ -1,4 +1,4 @@
-import { Book, FileText, Brain, Link as LinkIcon } from "lucide-react";
+import { Book, FileText, Brain, Link as LinkIcon, MessageCircle, Save, Bookmark } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -13,24 +13,19 @@ import { Link } from "react-router-dom";
 
 const menuItems = [
   {
-    title: "Home",
+    title: "Documents",
     url: "/",
-    icon: Brain,
-  },
-  {
-    title: "Links & Articles",
-    url: "/links",
-    icon: LinkIcon,
-  },
-  {
-    title: "Notes",
-    url: "/notes",
     icon: FileText,
   },
   {
-    title: "Flashcards",
+    title: "Chat",
     url: "/flashcards",
-    icon: Book,
+    icon: MessageCircle,
+  },
+  {
+    title: "Archive",
+    url: "/archive",
+    icon: Bookmark,
   },
 ];
 
