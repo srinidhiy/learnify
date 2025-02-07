@@ -1,3 +1,4 @@
+
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,10 +9,19 @@ const AuthPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
-    supabase.auth.onAuthStateChange((event, session) => {
+    supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
-        navigate("/");
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('has_onboarded')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile?.has_onboarded) {
+          navigate("/");
+        } else {
+          navigate("/onboarding");
+        }
       }
     });
   }, [navigate]);
