@@ -1,4 +1,7 @@
 import { Card } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useState } from "react";
 
 const documents = [
   { id: 1, title: "Introduction to Neural Networks", topic: "Coding", dueDate: "Today" },
@@ -6,11 +9,30 @@ const documents = [
   { id: 3, title: "Color Theory Fundamentals", topic: "Design", dueDate: "Tomorrow" },
 ];
 
-export default function Dashboard() {
+
+const Dashboard = () => {
+  const [signedInUser, setSignedInUser] = useState(null);
+  const { user } = useAuth();
+  if (!user) return;
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      if (profile) {
+        setSignedInUser(profile);
+      }
+    };
+    getUser();
+  }, []);
+
   return (
     <div className="space-y-6 pb-12">
       <div>
-        <h1 className="text-3xl font-bold">Welcome back, Learner!</h1>
+        <h1 className="text-3xl font-bold">Welcome back, {signedInUser?.full_name}</h1>
         <p className="text-muted-foreground mt-1">Here's what you need to review today.</p>
       </div>
       
@@ -28,3 +50,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
+export default Dashboard;

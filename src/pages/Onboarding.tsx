@@ -56,25 +56,50 @@ const OnboardingPage = () => {
     setIsLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      console.log(user);
       if (!user) throw new Error('No user found');
 
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: fullName,
-          avatar_url: avatarUrl,
-          has_onboarded: true,
-        })
-        .eq('id', user.id);
+      const { data: existingProfile, error: profileCheckError } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      if (profileCheckError) console.log('Profile check error: ', profileCheckError);
+      console.log('Existing profile: ', existingProfile);
 
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Profile updated successfully",
+      const { data: profile, error: updateError } = await supabase
+      .from('profiles')
+      .upsert({
+        id: user.id,
+        full_name: fullName,
+        avatar_url: avatarUrl,
+        has_onboarded: true,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'id'
       });
+
+    if (updateError) {
+      console.log('Update error:', updateError);
+      throw updateError;
+    }
+
+    console.log('Profile updated successfully:', profile);
+
+    // Refresh the session after profile update
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) {
+      console.log('Session refresh error:', refreshError);
+    }
+
+    toast({
+      title: "Success",
+      description: "Profile updated successfully",
+    });
+    
+    // Add a small delay before navigation
+    setTimeout(() => {
       navigate('/');
+    }, 500);
+    
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -88,7 +113,7 @@ const OnboardingPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-primary p-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-primary p-4">
       <div className="w-full max-w-md space-y-8 bg-secondary p-8 rounded-lg shadow-lg">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-foreground">Complete Your Profile</h2>
