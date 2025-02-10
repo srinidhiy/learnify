@@ -37,6 +37,7 @@ function App() {
                   element={<AuthGuard type="authenticated"><MainLayout><Dashboard /></MainLayout></AuthGuard>}
                 />
             </Routes>
+            <Toaster />
           </SidebarProvider>
           </AuthProvider>
         </TooltipProvider>

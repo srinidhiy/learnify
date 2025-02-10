@@ -1,5 +1,5 @@
 
-import { Book, FileText, Brain, MessageCircle, Save, Bookmark, Plus } from "lucide-react";
+import { Book, FileText, Brain, MessageCircle, Save, Bookmark, Plus, BookAIcon } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -11,18 +11,14 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { useToast } from "./ui/use-toast";
 import { ScrollArea } from "./ui/scroll-area";
-
-interface Topic {
-  id: string;
-  name: string;
-  path: string;
-}
+import { useAuth } from "@/contexts/AuthContext";
+import { createTopic, getTopics } from "@/lib/supabaseUtils";
 
 const menuItems = [
   {
@@ -44,43 +40,43 @@ const menuItems = [
 
 export function AppSidebar() {
   const { toast } = useToast();
-  const [topics, setTopics] = useState<Topic[]>([
-    { id: "1", name: "Coding", path: "/topics/coding" },
-    { id: "2", name: "Economics", path: "/topics/economics" },
-    { id: "3", name: "Design", path: "/topics/design" },
-  ]);
+  const [topics, setTopics] = useState([]);
   const [newTopicName, setNewTopicName] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const { user } = useAuth();
 
-  const handleAddTopic = () => {
-    if (!newTopicName.trim()) {
+  useEffect(() => {
+    if (!user) return;
+    const fetchTopics = async () => {
+      const userTopics = await getTopics(user);
+      if (userTopics) setTopics(userTopics);
+    };
+    fetchTopics();
+  }, [user]);
+
+
+  const handleAddTopic = async () => {
+    try {
+      const newTopic = await createTopic(user, newTopicName);
+      console.log('New topic:', newTopic);
+      if (newTopic) {
+        setTopics((prevTopics) => [...prevTopics, newTopic[0]]);
+        setNewTopicName("");
+        setIsOpen(false);
+      }
+    } catch (error) {
       toast({
         title: "Error",
-        description: "Please enter a topic name",
+        description: `Error creating topic: ${error.message}`,
         variant: "destructive",
       });
-      return;
     }
-
-    const newTopic: Topic = {
-      id: (topics.length + 1).toString(),
-      name: newTopicName,
-      path: `/topics/${newTopicName.toLowerCase().replace(/\s+/g, '-')}`,
-    };
-
-    setTopics([...topics, newTopic]);
-    setNewTopicName("");
-    setIsOpen(false);
-    toast({
-      title: "Success",
-      description: `Topic "${newTopicName}" has been added`,
-    });
   };
 
   return (
     <Sidebar>
       <SidebarContent>
-        <SidebarGroup>
+        <SidebarGroup className="mb-6">
           <SidebarGroupLabel>
             <span className="text-mindmosaic-400 font-bold tracking-wider">LEARNIFY</span>
           </SidebarGroupLabel>
@@ -102,8 +98,8 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        <SidebarGroup className="mt-6">
+        <hr/>
+        <SidebarGroup className="mt-3">
           <SidebarGroupLabel className="flex justify-between items-center pr-4">
             <span className="text-muted-foreground font-medium">Topics</span>
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -142,10 +138,10 @@ export function AppSidebar() {
                   <SidebarMenuItem key={topic.id}>
                     <SidebarMenuButton asChild>
                       <Link
-                        to={topic.path}
+                        to={`/topics/${topic.name.toLowerCase().replace(/\s+/g, '-')}`}
                         className="folder-tab group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                       >
-                        <Bookmark className="h-4 w-4" />
+                        <Book className="h-4 w-4" />
                         <span>{topic.name}</span>
                       </Link>
                     </SidebarMenuButton>
