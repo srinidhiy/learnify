@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from '@/integrations/supabase/client';
+import { getUser } from "@/lib/supabaseUtils";
 import { useEffect, useState } from "react";
 
 const documents = [
@@ -16,18 +17,11 @@ const Dashboard = () => {
   if (!user) return;
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-      if (profile) {
-        setSignedInUser(profile);
-      }
+    const fetchUserProfile = async () => {
+      setSignedInUser(await getUser(user));
     };
-    getUser();
-  }, []);
+    fetchUserProfile();
+  }, [user]);
 
   return (
     <div className="space-y-6 pb-12">

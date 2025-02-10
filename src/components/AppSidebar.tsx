@@ -13,7 +13,7 @@ import { Link } from "react-router-dom";
 
 const menuItems = [
   {
-    title: "Documents",
+    title: "All Documents",
     url: "/",
     icon: FileText,
   },
