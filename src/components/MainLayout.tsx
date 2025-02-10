@@ -1,11 +1,11 @@
+
 import { AppSidebar } from "./AppSidebar";
-import { BottomBar } from "./BottomBar";
 import { UploadModal } from "./UploadModal";
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex w-full bg-primary relative">
-      <div className="fixed top-0 bottom-10 left-0">
+      <div className="fixed top-0 bottom-0 left-0">
         <AppSidebar />
       </div>
       <div className="flex-1 flex flex-col ml-[260px]">
@@ -15,7 +15,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           </div>
           {children}
         </div>
-        <BottomBar />
       </div>
     </div>
   );
