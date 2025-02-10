@@ -179,7 +179,7 @@ export type Database = {
     }
     Enums: {
       document_status: "unread" | "in_progress" | "completed"
-      document_type: "article" | "pdf" | "note" | "link"
+      document_type: "article" | "pdf"
     }
     CompositeTypes: {
       [_ in never]: never
