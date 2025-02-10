@@ -12,7 +12,6 @@ export type Database = {
       documents: {
         Row: {
           created_at: string
-          document_type: Database["public"]["Enums"]["document_type"]
           document_url: string | null
           id: string
           status: Database["public"]["Enums"]["document_status"]
@@ -24,7 +23,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          document_type: Database["public"]["Enums"]["document_type"]
           document_url?: string | null
           id?: string
           status?: Database["public"]["Enums"]["document_status"]
@@ -36,7 +34,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          document_type?: Database["public"]["Enums"]["document_type"]
           document_url?: string | null
           id?: string
           status?: Database["public"]["Enums"]["document_status"]
