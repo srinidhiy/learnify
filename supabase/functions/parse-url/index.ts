@@ -2,11 +2,26 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { JSDOM } from 'npm:jsdom';
 import { Readability } from 'npm:@mozilla/readability';
+import { HTMLRewriter} from 'htmlrewriter';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+const toBeRemovedTags = ['script', 'style', 'noscript', 'iframe']
+class ElementHandler {
+  element(element) {
+      if (toBeRemovedTags.includes(element.tagName)) {
+          element.remove()
+      }
+  }
+
+  comments(comment) {
+      comment.remove()
+  }
+}
+
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -26,7 +41,8 @@ serve(async (req) => {
 
     // Fetch the URL content
     const response = await fetch(url);
-    const html = await response.text();
+    const newResponse = new HTMLRewriter().on('*', new ElementHandler()).transform(response)
+    const html = await newResponse.text();
 
     // Parse the HTML content
     const dom = new JSDOM(html, { url });
