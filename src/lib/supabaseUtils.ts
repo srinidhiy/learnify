@@ -1,7 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { Readability } from '@mozilla/readability';
-import { JSDOM } from 'jsdom';
 
 export const getUser = async (user: User) => {
     const { data: profile, error } = await supabase
@@ -87,25 +86,6 @@ export const getDocuments = async (user: User) => {
     return null;
 }
 
-const parseUrl = async (url: string) => {
-    try {
-        const response = await fetch(url);
-        const html = await response.text();
-        const dom = new JSDOM(html);
-        const reader = new Readability(dom.window.document);
-        const article = reader.parse();
-        
-        return {
-            title: article?.title || 'Untitled',
-            content: article?.content || '',
-            excerpt: article?.excerpt || '',
-        };
-    } catch (error) {
-        console.error('Error parsing URL:', error);
-        throw new Error('Failed to parse URL');
-    }
-};
-
 export const createDocument = async (user: User, documentData: any) => {
     if (!documentData.topic || documentData.topic === '') {
         throw new Error('Document must have a topic');
@@ -115,9 +95,6 @@ export const createDocument = async (user: User, documentData: any) => {
     } catch (error) {
         throw new Error('Invalid URL');
     }
-
-    // Parse the URL content
-    const parsedContent = await parseUrl(documentData.document_url);
 
     // Create topic if it doesn't exist, otherwise get the topic id
     const parsedTopic = documentData.topic;
@@ -154,17 +131,32 @@ export const createDocument = async (user: User, documentData: any) => {
     const { topic, ...restDocumentData } = documentData;
     const newDocument = {
         ...restDocumentData,
-        title: parsedContent.title,
-        content: parsedContent.content,
-        excerpt: parsedContent.excerpt,
         user_id: user.id,
         topic_id: topicId,
         status: 'unread',
     };
 
+    // Use edge function to parse URL and get content
+    const { data: response, error: functionError } = await supabase.functions.invoke('parse-url', {
+        body: { url: documentData.document_url }
+    });
+
+    if (functionError) {
+        console.error('Error parsing URL:', functionError);
+        throw functionError;
+    }
+
+    // Merge the parsed content with the document data
+    const documentWithContent = {
+        ...newDocument,
+        title: response.title,
+        content: response.content,
+        excerpt: response.excerpt
+    };
+
     const { data: document, error } = await supabase
         .from('documents')
-        .insert(newDocument)
+        .insert(documentWithContent)
         .select();
 
     if (error) {
