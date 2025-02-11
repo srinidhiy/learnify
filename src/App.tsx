@@ -8,6 +8,7 @@ import { MainLayout } from "./components/MainLayout";
 import Documents from "./pages/Documents";
 import AuthPage from "./pages/Auth";
 import OnboardingPage from "./pages/Onboarding";
+import Reader from "./pages/Reader";
 import { SidebarProvider } from "./components/ui/sidebar";
 import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
@@ -24,18 +25,22 @@ function App() {
           <AuthProvider>
           <SidebarProvider>
             <Routes>
-            <Route
-                  path="/auth"
-                  element={<AuthGuard type="auth"><AuthPage /></AuthGuard>}
-                />
-                <Route
-                  path="/onboarding"
-                  element={<AuthGuard type="onboarding"><OnboardingPage /></AuthGuard>}
-                />
-                <Route
-                  path="/*"
-                  element={<AuthGuard type="authenticated"><MainLayout><Documents /></MainLayout></AuthGuard>}
-                />
+              <Route
+                path="/auth"
+                element={<AuthGuard type="auth"><AuthPage /></AuthGuard>}
+              />
+              <Route
+                path="/onboarding"
+                element={<AuthGuard type="onboarding"><OnboardingPage /></AuthGuard>}
+              />
+              <Route
+                path="/reader/:documentId"
+                element={<AuthGuard type="authenticated"><Reader /></AuthGuard>}
+              />
+              <Route
+                path="/*"
+                element={<AuthGuard type="authenticated"><MainLayout><Documents /></MainLayout></AuthGuard>}
+              />
             </Routes>
             <Toaster />
           </SidebarProvider>

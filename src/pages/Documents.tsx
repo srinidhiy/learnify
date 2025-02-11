@@ -6,13 +6,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from '@/integrations/supabase/client';
 import { getDocuments, getUser } from "@/lib/supabaseUtils";
 import { useEffect, useState } from "react";
-import { ReaderView } from "@/components/ReaderView";
 import { BookOpen } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Documents = () => {
   const [signedInUser, setSignedInUser] = useState(null);
   const [documents, setDocuments] = useState([]);
-  const [selectedDocumentId, setSelectedDocumentId] = useState(null);
+  const navigate = useNavigate();
   const { user } = useAuth();
   if (!user) return;
 
@@ -51,7 +51,7 @@ const Documents = () => {
           <Card 
             key={doc.id} 
             className="p-6 hover:bg-accent/5 cursor-pointer transition-colors"
-            onClick={() => setSelectedDocumentId(doc.id)}
+            onClick={() => navigate(`/reader/${doc.id}`)}
           >
             <div className="flex justify-between items-start">
               <div>
@@ -65,13 +65,8 @@ const Documents = () => {
           </Card>
         ))}
       </div>
-
-      <ReaderView 
-        documentId={selectedDocumentId} 
-        onClose={() => setSelectedDocumentId(null)} 
-      />
     </div>
   );
-}
+};
 
 export default Documents;
