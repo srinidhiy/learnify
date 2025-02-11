@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { Readability } from '@mozilla/readability';
+import { JSDOM } from 'jsdom';
 
 export const getUser = async (user: User) => {
     const { data: profile, error } = await supabase
@@ -66,7 +68,6 @@ export const createTopic = async (user: User, topicName: string) => {
     return null;
 }
 
-
 export const getDocuments = async (user: User) => {
     const { data: documents, error } = await supabase
         .from('documents')
@@ -86,6 +87,25 @@ export const getDocuments = async (user: User) => {
     return null;
 }
 
+const parseUrl = async (url: string) => {
+    try {
+        const response = await fetch(url);
+        const html = await response.text();
+        const dom = new JSDOM(html);
+        const reader = new Readability(dom.window.document);
+        const article = reader.parse();
+        
+        return {
+            title: article?.title || 'Untitled',
+            content: article?.content || '',
+            excerpt: article?.excerpt || '',
+        };
+    } catch (error) {
+        console.error('Error parsing URL:', error);
+        throw new Error('Failed to parse URL');
+    }
+};
+
 export const createDocument = async (user: User, documentData: any) => {
     if (!documentData.topic || documentData.topic === '') {
         throw new Error('Document must have a topic');
@@ -96,7 +116,10 @@ export const createDocument = async (user: User, documentData: any) => {
         throw new Error('Invalid URL');
     }
 
-    // create topic if it doesn't exist, otherwise get the topic id
+    // Parse the URL content
+    const parsedContent = await parseUrl(documentData.document_url);
+
+    // Create topic if it doesn't exist, otherwise get the topic id
     const parsedTopic = documentData.topic;
     let topicId = null;
     const { data: existingTopic, error: topicError } = await supabase
@@ -105,6 +128,7 @@ export const createDocument = async (user: User, documentData: any) => {
         .eq('name', parsedTopic)
         .eq('user_id', user.id)
         .single();
+
     if (topicError) {
         if (topicError && topicError.code === 'PGRST116') {
             const { data: newTopic, error: createTopicError } = await supabase
@@ -119,25 +143,24 @@ export const createDocument = async (user: User, documentData: any) => {
             }
 
             topicId = newTopic.id;
-        } else if (existingTopic) {
-            topicId = existingTopic.id;
         } else {
             console.error('Error fetching topic:', topicError);
             throw topicError;
         }
+    } else {
+        topicId = existingTopic.id;
     }
-    topicId = existingTopic.id;
     
     const { topic, ...restDocumentData } = documentData;
     const newDocument = {
         ...restDocumentData,
-        title: "",
+        title: parsedContent.title,
+        content: parsedContent.content,
+        excerpt: parsedContent.excerpt,
         user_id: user.id,
         topic_id: topicId,
         status: 'unread',
     };
-
-    console.log('New document:', newDocument);
 
     const { data: document, error } = await supabase
         .from('documents')
