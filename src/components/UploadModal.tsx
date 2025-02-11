@@ -1,25 +1,66 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Upload, Link as LinkIcon, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { createDocument, getTopics } from "@/lib/supabaseUtils";
+import { toast } from "@/hooks/use-toast";
 
-export function UploadModal() {
+export function UploadModal({ onDocumentUpload }) {
   const [isLoading, setIsLoading] = useState(false);
   const [url, setUrl] = useState("");
   const [selectedTopic, setSelectedTopic] = useState("");
+  const [topics, setTopics] = useState([]);
+  const [newTopicName, setNewTopicName] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchTopics = async () => {
+      const userTopics = await getTopics(user);
+      if (userTopics) setTopics(userTopics);
+    }
+    fetchTopics();
+  }, [user]);
+
+  const handleOpenChange = (open) => {
+    setIsOpen(open);
+    if (!open) {
+      setUrl("");
+      setSelectedTopic("");
+      setNewTopicName("");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    let err = false;
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsLoading(false);
+    try {
+      const docTopic = selectedTopic === "new_topic" ? newTopicName : selectedTopic;
+      const newDocument = await createDocument(user, { document_url: url, topic: docTopic });
+      onDocumentUpload(newDocument[0]);
+    } catch (error) {
+      err = true;
+      toast({
+        title: "Error",
+        description: `Error creating document: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      if (!err) {
+        handleOpenChange(false);
+      } 
+      setIsLoading(false);
+    }
   };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="bg-accent hover:bg-accent/90">
           <Upload className="w-4 h-4 mr-2" />
@@ -39,12 +80,24 @@ export function UploadModal() {
                 <SelectValue placeholder="Select a topic" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="coding">Coding</SelectItem>
-                <SelectItem value="economics">Economics</SelectItem>
-                <SelectItem value="design">Design</SelectItem>
+                <SelectItem value="new_topic">Add a new topic</SelectItem>
+                {topics && topics.map((topic) => (
+                  <SelectItem key={topic.id} value={topic.name}>
+                    {topic.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
+            <div className="space-y-2">
+            {selectedTopic === "new_topic" && (
+              <Input 
+              value={newTopicName}
+              onChange={(e) => setNewTopicName(e.target.value)} 
+              placeholder="Enter new topic name" 
+              />
+            )}  
+            </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">URL</label>
             <div className="relative">

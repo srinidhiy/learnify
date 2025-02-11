@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { MainLayout } from "./components/MainLayout";
-import Dashboard from "./pages/Dashboard";
+import Documents from "./pages/Documents";
 import AuthPage from "./pages/Auth";
 import OnboardingPage from "./pages/Onboarding";
 import { SidebarProvider } from "./components/ui/sidebar";
@@ -34,7 +34,7 @@ function App() {
                 />
                 <Route
                   path="/*"
-                  element={<AuthGuard type="authenticated"><MainLayout><Dashboard /></MainLayout></AuthGuard>}
+                  element={<AuthGuard type="authenticated"><MainLayout><Documents /></MainLayout></AuthGuard>}
                 />
             </Routes>
             <Toaster />
