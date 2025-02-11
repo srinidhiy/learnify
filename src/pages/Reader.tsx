@@ -65,19 +65,32 @@ export default function Reader() {
 
         <h1 className="text-3xl font-bold mb-8">{content?.title}</h1>
         
-        <div 
-          className="prose prose-invert max-w-none"
+        <article 
+          className="text-gray-200 max-w-none
+            [&_p]:mb-6 [&_p]:leading-relaxed
+            [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_a]:no-underline [&_a:hover]:underline
+            [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-gray-100 [&_h1]:my-6
+            [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-gray-100 [&_h2]:my-4
+            [&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-gray-100 [&_h3]:my-3
+            [&_strong]:text-gray-100
+            [&_img]:mx-auto [&_img]:my-6 [&_img]:max-w-full
+            [&_figure]:my-8 [&_figure]:mx-auto
+            [&_figcaption]:text-sm [&_figcaption]:text-gray-400 [&_figcaption]:text-center [&_figcaption]:mt-2
+            [&_time]:text-gray-400 [&_time]:text-sm
+            [&>div>ul]:list-none [&>div>ul]:p-0 [&>div>ul]:m-0
+            [&_section]:mt-8
+            [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:my-4
+            [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:my-4
+            [&_li]:mb-2"
           style={{ 
             fontSize: `${fontSize}px`,
-            '--tw-prose-invert-links': '#9b87f5',
-            '--tw-prose-invert-p': 'rgb(229 231 235)'
-          } as React.CSSProperties}
+          }}
         >
           <div 
-            className="[&>p]:mb-6 [&>p>a]:text-accent hover:[&>p>a]:underline"
             dangerouslySetInnerHTML={{ __html: content?.content || '' }}
           />
-        </div>
+        </article>
+
       </div>
     </div>
   );
