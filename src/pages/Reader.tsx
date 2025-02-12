@@ -162,6 +162,7 @@ export default function Reader() {
         <NoteSidebar
           documentId={documentId}
           selectedText={selectedText}
+          setSelectedText={setSelectedText}
           onClose={() => {
             setShowNotes(false);
             setSelectedText(null);

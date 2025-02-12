@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Card } from "./ui/card";
@@ -21,9 +22,16 @@ interface NoteSidebarProps {
   selectedText: string | null;
   onClose: () => void;
   onNoteClick?: (text: string) => void;
+  setSelectedText: (text: string | null) => void;
 }
 
-export function NoteSidebar({ documentId, selectedText, onClose, onNoteClick }: NoteSidebarProps) {
+export function NoteSidebar({ 
+  documentId, 
+  selectedText, 
+  onClose, 
+  onNoteClick,
+  setSelectedText 
+}: NoteSidebarProps) {
   const [newNote, setNewNote] = useState("");
   const { toast } = useToast();
   const { user } = useAuth();
