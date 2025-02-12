@@ -4,7 +4,6 @@ import { ScrollArea } from "./ui/scroll-area";
 import { Card } from "./ui/card";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
-import { X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -85,59 +84,54 @@ export function NoteSidebar({
   };
 
   return (
-    <div className="w-80 border-l border-border fixed right-0 top-0 bottom-0 bg-background p-4 overflow-hidden flex flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">Notes</h2>
-        <Button variant="ghost" size="icon" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
+    <div className="w-80 border-l border-border h-screen bg-background overflow-hidden">
+      <div className="flex flex-col h-full">
+        <h2 className="text-lg font-semibold p-4">Notes</h2>
 
-      <div className="space-y-4 flex-1 overflow-hidden">
-        {selectedText && !isAddingNote && (
-          <Button 
-            className="w-full"
-            onClick={() => setIsAddingNote(true)}
-          >
-            Add note for selected text
-          </Button>
-        )}
-
-        {isAddingNote && selectedText && (
-          <Card className="p-4">
-            <p className="text-sm text-muted-foreground mb-2">Add note for selected text:</p>
-            <p className="text-sm italic mb-4 border-l-2 border-primary/50 pl-2">
-              "{selectedText}"
-            </p>
-            <Textarea
-              value={newNote}
-              onChange={(e) => setNewNote(e.target.value)}
-              placeholder="Write your note..."
-              className="mb-2"
-            />
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleSubmitNote}
-                disabled={!newNote.trim()}
-                className="flex-1"
-              >
-                Add Note
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => {
-                  setIsAddingNote(false);
-                  setSelectedText(null);
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          </Card>
-        )}
-
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 px-4 pb-4">
           <div className="space-y-4">
+            {selectedText && !isAddingNote && (
+              <Button 
+                className="w-full"
+                onClick={() => setIsAddingNote(true)}
+              >
+                Add note for selected text
+              </Button>
+            )}
+
+            {isAddingNote && selectedText && (
+              <Card className="p-4">
+                <p className="text-sm text-muted-foreground mb-2">Add note for selected text:</p>
+                <p className="text-sm italic mb-4 border-l-2 border-primary/50 pl-2">
+                  "{selectedText}"
+                </p>
+                <Textarea
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  placeholder="Write your note..."
+                  className="mb-2"
+                />
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleSubmitNote}
+                    disabled={!newNote.trim()}
+                    className="flex-1"
+                  >
+                    Add Note
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setIsAddingNote(false);
+                      setSelectedText(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </Card>
+            )}
+
             {notes?.map((note) => (
               <Card 
                 key={note.id} 
