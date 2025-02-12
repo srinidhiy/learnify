@@ -62,11 +62,11 @@ export default function Reader() {
     const cleanText = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const newHtml = contentHtml.replace(
       new RegExp(`(${cleanText})`, 'g'),
-      '<span class="bg-primary/20">$1</span>'
+      '<span class="highlighted-text">$1</span>'
     );
     contentRef.current.innerHTML = newHtml;
 
-    const highlightedEl = contentRef.current.querySelector('.bg-primary/20');
+    const highlightedEl = contentRef.current.querySelector('.highlighted-text');
     if (highlightedEl) {
       highlightedEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -81,7 +81,7 @@ export default function Reader() {
         const cleanText = note.referenced_text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         newHtml = newHtml.replace(
           new RegExp(`(${cleanText})`, 'g'),
-          '<span class="bg-primary/20">$1</span>'
+          '<span class="highlighted-text">$1</span>'
         );
       }
     });
@@ -143,7 +143,8 @@ export default function Reader() {
               [&_section]:mt-8
               [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:my-4
               [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:my-4
-              [&_li]:mb-2"
+              [&_li]:mb-2
+              [&_.highlighted-text]:bg-primary/20"
             style={{ 
               fontSize: `${fontSize}px`,
             }}
