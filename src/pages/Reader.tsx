@@ -4,15 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Minus, Plus } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { NoteSidebar } from "@/components/NoteSidebar";
 
 export default function Reader() {
   const { documentId } = useParams();
   const navigate = useNavigate();
   const [fontSize, setFontSize] = useState(16);
-  const [showNotes, setShowNotes] = useState(false);
+  const [showNotes, setShowNotes] = useState(true);
   const [selectedText, setSelectedText] = useState<string | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const { data: content, isLoading } = useQuery({
     queryKey: ['document-content', documentId],
@@ -30,15 +31,62 @@ export default function Reader() {
     enabled: !!documentId
   });
 
+  const { data: notes } = useQuery({
+    queryKey: ['notes', documentId],
+    queryFn: async () => {
+      if (!documentId) return null;
+      const { data, error } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('document_id', documentId);
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!documentId
+  });
+
   const handleTextSelection = useCallback(() => {
     const selection = window.getSelection();
     const selectedText = selection?.toString().trim();
     
     if (selectedText && selectedText.length > 0) {
       setSelectedText(selectedText);
-      setShowNotes(true);
     }
   }, []);
+
+  const scrollToText = useCallback((text: string) => {
+    if (!contentRef.current) return;
+
+    const contentHtml = contentRef.current.innerHTML;
+    const cleanText = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const newHtml = contentHtml.replace(
+      new RegExp(`(${cleanText})`, 'g'),
+      '<span class="bg-primary/20">$1</span>'
+    );
+    contentRef.current.innerHTML = newHtml;
+
+    const highlightedEl = contentRef.current.querySelector('.bg-primary/20');
+    if (highlightedEl) {
+      highlightedEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!contentRef.current || !notes || !content) return;
+
+    let newHtml = content.content;
+    notes.forEach(note => {
+      if (note.referenced_text) {
+        const cleanText = note.referenced_text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        newHtml = newHtml.replace(
+          new RegExp(`(${cleanText})`, 'g'),
+          '<span class="bg-primary/20">$1</span>'
+        );
+      }
+    });
+    contentRef.current.innerHTML = newHtml;
+  }, [notes, content]);
 
   if (isLoading) {
     return (
@@ -102,13 +150,14 @@ export default function Reader() {
             onMouseUp={handleTextSelection}
           >
             <div 
+              ref={contentRef}
               dangerouslySetInnerHTML={{ __html: content?.content || '' }}
             />
           </article>
         </div>
       </div>
 
-      {showNotes && documentId && (
+      {documentId && (
         <NoteSidebar
           documentId={documentId}
           selectedText={selectedText}
@@ -116,6 +165,7 @@ export default function Reader() {
             setShowNotes(false);
             setSelectedText(null);
           }}
+          onNoteClick={scrollToText}
         />
       )}
     </div>

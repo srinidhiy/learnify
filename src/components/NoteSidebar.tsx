@@ -21,12 +21,14 @@ interface NoteSidebarProps {
   documentId: string;
   selectedText: string | null;
   onClose: () => void;
+  onNoteClick?: (text: string) => void;
 }
 
-export function NoteSidebar({ documentId, selectedText, onClose }: NoteSidebarProps) {
+export function NoteSidebar({ documentId, selectedText, onClose, onNoteClick }: NoteSidebarProps) {
   const [newNote, setNewNote] = useState("");
   const { toast } = useToast();
   const { user } = useAuth();
+  const [isAddingNote, setIsAddingNote] = useState(false);
 
   const { data: notes, refetch: refetchNotes } = useQuery({
     queryKey: ['notes', documentId],
@@ -58,6 +60,7 @@ export function NoteSidebar({ documentId, selectedText, onClose }: NoteSidebarPr
       if (error) throw error;
 
       setNewNote("");
+      setIsAddingNote(false);
       refetchNotes();
       toast({
         title: "Note added successfully",
@@ -83,7 +86,16 @@ export function NoteSidebar({ documentId, selectedText, onClose }: NoteSidebarPr
       </div>
 
       <div className="space-y-4">
-        {selectedText && (
+        {selectedText && !isAddingNote && (
+          <Button 
+            className="w-full"
+            onClick={() => setIsAddingNote(true)}
+          >
+            Add note for selected text
+          </Button>
+        )}
+
+        {isAddingNote && selectedText && (
           <Card className="p-4">
             <p className="text-sm text-muted-foreground mb-2">Add note for selected text:</p>
             <p className="text-sm italic mb-4 border-l-2 border-primary/50 pl-2">
@@ -95,20 +107,32 @@ export function NoteSidebar({ documentId, selectedText, onClose }: NoteSidebarPr
               placeholder="Write your note..."
               className="mb-2"
             />
-            <Button 
-              onClick={handleSubmitNote}
-              disabled={!newNote.trim()}
-              className="w-full"
-            >
-              Add Note
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleSubmitNote}
+                disabled={!newNote.trim()}
+                className="flex-1"
+              >
+                Add Note
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setIsAddingNote(false)}
+              >
+                Cancel
+              </Button>
+            </div>
           </Card>
         )}
 
         <ScrollArea className="h-[calc(100vh-200px)]">
           <div className="space-y-4">
             {notes?.map((note) => (
-              <Card key={note.id} className="p-4">
+              <Card 
+                key={note.id} 
+                className="p-4 cursor-pointer hover:bg-accent/50 transition-colors"
+                onClick={() => note.referenced_text && onNoteClick?.(note.referenced_text)}
+              >
                 {note.referenced_text && (
                   <p className="text-sm text-muted-foreground mb-2 italic border-l-2 border-primary/50 pl-2">
                     "{note.referenced_text}"
