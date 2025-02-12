@@ -97,8 +97,8 @@ export default function Reader() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className={`p-6 md:p-12 transition-all ${showNotes ? 'mr-80' : ''}`}>
+    <div className="min-h-screen bg-background flex">
+      <div className={`flex-1 p-6 md:p-12 ${showNotes ? 'mr-80' : ''}`}>
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <Button 
@@ -128,7 +128,7 @@ export default function Reader() {
           <h1 className="text-3xl font-bold mb-8">{content?.title}</h1>
           
           <article 
-            className="text-gray-200 max-w-none
+            className="text-gray-200 max-w-none prose-invert
               [&_p]:mb-6 [&_p]:leading-relaxed
               [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_a]:no-underline [&_a:hover]:underline
               [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-gray-100 [&_h1]:my-6
@@ -144,7 +144,7 @@ export default function Reader() {
               [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:my-4
               [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:my-4
               [&_li]:mb-2
-              [&_.highlighted-text]:bg-primary/20"
+              [&_.highlighted-text]:bg-[#333333]"
             style={{ 
               fontSize: `${fontSize}px`,
             }}

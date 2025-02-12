@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Card } from "./ui/card";
@@ -61,6 +60,7 @@ export function NoteSidebar({ documentId, selectedText, onClose, onNoteClick }: 
 
       setNewNote("");
       setIsAddingNote(false);
+      setSelectedText(null);
       refetchNotes();
       toast({
         title: "Note added successfully",
@@ -77,7 +77,7 @@ export function NoteSidebar({ documentId, selectedText, onClose, onNoteClick }: 
   };
 
   return (
-    <div className="w-80 border-l border-border h-screen fixed right-0 top-0 bg-background p-4">
+    <div className="w-80 border-l border-border fixed right-0 top-0 bottom-0 bg-background p-4 overflow-hidden flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">Notes</h2>
         <Button variant="ghost" size="icon" onClick={onClose}>
@@ -85,7 +85,7 @@ export function NoteSidebar({ documentId, selectedText, onClose, onNoteClick }: 
         </Button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 flex-1 overflow-hidden">
         {selectedText && !isAddingNote && (
           <Button 
             className="w-full"
@@ -117,7 +117,10 @@ export function NoteSidebar({ documentId, selectedText, onClose, onNoteClick }: 
               </Button>
               <Button 
                 variant="outline"
-                onClick={() => setIsAddingNote(false)}
+                onClick={() => {
+                  setIsAddingNote(false);
+                  setSelectedText(null);
+                }}
               >
                 Cancel
               </Button>
@@ -125,7 +128,7 @@ export function NoteSidebar({ documentId, selectedText, onClose, onNoteClick }: 
           </Card>
         )}
 
-        <ScrollArea className="h-[calc(100vh-200px)]">
+        <ScrollArea className="flex-1">
           <div className="space-y-4">
             {notes?.map((note) => (
               <Card 
