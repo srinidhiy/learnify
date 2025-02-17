@@ -171,3 +171,44 @@ export const createDocument = async (user: User, documentData: any) => {
 
     return null;
 }
+
+export const getDocument = async (user: User, documentId: string) => {
+    const { data: document, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('id', documentId)
+        .eq('user_id', user.id)
+        .single();
+
+    if (error) {
+        console.error('Error fetching document:', error);
+        throw error;
+    }
+
+    if (document) {
+        console.log('Document:', document);
+        return document;
+    }
+
+    return null;
+}
+
+export const getNotes = async (user: User, documentId: string) => {
+    const { data: notes, error } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('document_id', documentId)
+        .eq('user_id', user.id);
+
+    if (error) {
+        console.error('Error fetching notes:', error);
+        throw error;
+    }
+
+    if (notes) {
+        console.log('Notes:', notes);
+        return notes;
+    }
+
+    return null;
+}

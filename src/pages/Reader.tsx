@@ -5,46 +5,30 @@ import { Loader2, Minus, Plus } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useState, useCallback, useEffect, useRef } from "react";
-import { NoteSidebar } from "@/components/NoteSidebar";
+import { ReaderSidebar } from "@/components/ReaderSidebar";
+import { useAuth } from "@/contexts/AuthContext";
+import { getDocument, getNotes } from "@/lib/supabaseUtils";
 
 export default function Reader() {
   const { documentId } = useParams();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [document, setDocument] = useState(null);
+  const [notes, setNotes] = useState([]);
   const [fontSize, setFontSize] = useState(16);
-  const [showNotes, setShowNotes] = useState(true);
   const [selectedText, setSelectedText] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const { data: content, isLoading } = useQuery({
-    queryKey: ['document-content', documentId],
-    queryFn: async () => {
-      if (!documentId) return null;
-      const { data, error } = await supabase
-        .from('documents')
-        .select('content, title')
-        .eq('id', documentId)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!documentId
-  });
-
-  const { data: notes } = useQuery({
-    queryKey: ['notes', documentId],
-    queryFn: async () => {
-      if (!documentId) return null;
-      const { data, error } = await supabase
-        .from('notes')
-        .select('*')
-        .eq('document_id', documentId);
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!documentId
-  });
+  useEffect(() => {
+      const fetchDocument = async () => {
+        setDocument(await getDocument(user, documentId));
+      };
+      const fetchNotes = async () => {
+        setNotes(await getNotes(user, documentId));
+      };
+      fetchDocument();
+      fetchNotes();
+    }, [user]);
 
   const handleTextSelection = useCallback(() => {
     const selection = window.getSelection();
@@ -52,11 +36,15 @@ export default function Reader() {
     
     if (selectedText && selectedText.length > 0) {
       setSelectedText(selectedText);
+    } else {
+      setSelectedText(null);
     }
   }, []);
 
   const scrollToText = useCallback((text: string) => {
     if (!contentRef.current) return;
+
+    console.log(contentRef.current.innerHTML);
 
     const contentHtml = contentRef.current.innerHTML;
     const cleanText = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -73,9 +61,9 @@ export default function Reader() {
   }, []);
 
   useEffect(() => {
-    if (!contentRef.current || !notes || !content) return;
+    if (!contentRef.current || !notes || !document) return;
 
-    let newHtml = content.content;
+    let newHtml = document.content;
     notes.forEach(note => {
       if (note.referenced_text) {
         const cleanText = note.referenced_text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -86,24 +74,16 @@ export default function Reader() {
       }
     });
     contentRef.current.innerHTML = newHtml;
-  }, [notes, content]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="w-8 h-8 animate-spin" />
-      </div>
-    );
-  }
+  }, [notes, document]);
 
   return (
     <div className="min-h-screen bg-background flex">
-      <div className={`flex-1 p-6 md:p-12 ${showNotes ? 'mr-80' : ''}`}>
-        <div className="max-w-4xl mx-auto">
+      <div className={`flex-1 p-6 md:p-12 mr-80`}>
+        <div className="w-3/4 mx-auto">
           <div className="flex items-center justify-between mb-8">
             <Button 
               variant="ghost" 
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/')}
             >
               ← Back
             </Button>
@@ -125,7 +105,7 @@ export default function Reader() {
             </div>
           </div>
 
-          <h1 className="text-3xl font-bold mb-8">{content?.title}</h1>
+          <h1 className="text-3xl font-bold mb-8">{document?.title}</h1>
           
           <article 
             className="text-gray-200 max-w-none prose-invert
@@ -152,21 +132,17 @@ export default function Reader() {
           >
             <div 
               ref={contentRef}
-              dangerouslySetInnerHTML={{ __html: content?.content || '' }}
+              dangerouslySetInnerHTML={{ __html: document?.content || '' }}
             />
           </article>
         </div>
       </div>
 
       {documentId && (
-        <NoteSidebar
+        <ReaderSidebar
           documentId={documentId}
           selectedText={selectedText}
           setSelectedText={setSelectedText}
-          onClose={() => {
-            setShowNotes(false);
-            setSelectedText(null);
-          }}
           onNoteClick={scrollToText}
         />
       )}
