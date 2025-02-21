@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       documents: {
         Row: {
+          byline: string | null
           content: string | null
           created_at: string
           document_url: string | null
@@ -18,12 +19,14 @@ export type Database = {
           id: string
           status: Database["public"]["Enums"]["document_status"]
           summary: string | null
+          text_content: string | null
           title: string
           topic_id: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          byline?: string | null
           content?: string | null
           created_at?: string
           document_url?: string | null
@@ -31,12 +34,14 @@ export type Database = {
           id?: string
           status?: Database["public"]["Enums"]["document_status"]
           summary?: string | null
+          text_content?: string | null
           title: string
           topic_id: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          byline?: string | null
           content?: string | null
           created_at?: string
           document_url?: string | null
@@ -44,6 +49,7 @@ export type Database = {
           id?: string
           status?: Database["public"]["Enums"]["document_status"]
           summary?: string | null
+          text_content?: string | null
           title?: string
           topic_id?: string
           updated_at?: string
