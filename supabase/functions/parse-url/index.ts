@@ -22,7 +22,6 @@ class ElementHandler {
   }
 }
 
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -60,6 +59,8 @@ serve(async (req) => {
       title: article.title,
       content: article.content,
       excerpt: article.excerpt,
+      byline: article.byline,
+      textContent: article.textContent,
     };
 
     console.log('Successfully parsed URL:', url);
