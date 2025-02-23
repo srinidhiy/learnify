@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { JSDOM } from 'npm:jsdom';
 import { Readability } from 'npm:@mozilla/readability';
-import { HTMLRewriter} from 'htmlrewriter';
+import { HTMLRewriter} from 'npm:htmlrewriter';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -54,12 +54,15 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
+    
+    const normalizedArticle = article.content.replace(/<\/p>(?=<p)/g, '</p> ');
 
     const result = {
       title: article.title,
-      content: article.content,
+      content: normalizedArticle,
       excerpt: article.excerpt,
       byline: article.byline,
+      siteName: article.siteName,
       textContent: article.textContent,
     };
 

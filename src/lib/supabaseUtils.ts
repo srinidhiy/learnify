@@ -153,8 +153,12 @@ export const createDocument = async (user: User, documentData: any) => {
         content: response.content,
         excerpt: response.excerpt,
         byline: response.byline,
+        site_name: response.siteName,
         text_content: response.textContent
     };
+
+    console.log("BYLINE:", response.byline)
+    console.log("TEXTCONTENT:", response.textContent)
 
     const { data: document, error } = await supabase
         .from('documents')
