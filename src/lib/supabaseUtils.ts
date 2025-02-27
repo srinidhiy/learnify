@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
@@ -218,3 +217,38 @@ export const getNotes = async (user: User, documentId: string) => {
 
     return null;
 }
+
+export const deleteNote = async (user: User, documentId: string, noteId: string) => {
+    const { error } = await supabase
+        .from('notes')
+        .delete()
+        .match({
+            id: noteId,
+            user_id: user.id
+        });
+
+    if (error) {
+        console.error('Error deleting note:', error);
+        throw error;
+    }
+
+    console.log("Successfully deleted note:", noteId);
+    return true;
+}
+
+export const updateNote = async (user: User, noteId: string, content: string) => {
+    const { error } = await supabase
+        .from('notes')
+        .update({ content })
+        .match({
+            id: noteId,
+            user_id: user.id
+        });
+
+    if (error) {
+        console.error('Error updating note:', error);
+        throw error;
+    }
+
+    return true;
+};

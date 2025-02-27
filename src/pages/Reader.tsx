@@ -6,9 +6,21 @@ import { Button } from "@/components/ui/button";
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { ReaderSidebar } from "@/components/ReaderSidebar";
 import { useAuth } from "@/contexts/AuthContext";
-import { getDocument, getNotes } from "@/lib/supabaseUtils";
+import { getDocument, getNotes, deleteNote, updateNote } from "@/lib/supabaseUtils";
 import Mark from 'mark.js';
 import { useToast } from "@/hooks/use-toast";
+
+interface Note {
+  id: string;
+  content: string;
+  referenced_text: string | null;
+  created_at: string;
+  document_id: string;
+  user_id: string;
+  selection_id?: string;
+  start_offset?: number;
+  end_offset?: number;
+}
 
 // Helper function to normalize text for comparison
 const normalizeText = (text: string) => {
@@ -122,10 +134,28 @@ export default function Reader() {
     setSelectedText(normalizedSelection);
   }, []);
 
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      await deleteNote(user, documentId, noteId);
+      refetchNotes();
+      toast({
+        title: "Note deleted successfully",
+        duration: 3000,
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to delete note",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
+
   const handleSubmitNote = async () => {
     if (!user || !selectedText) return;
     
     try {
+      // Create new note
       const { error } = await supabase
         .from('notes')
         .insert({
@@ -137,11 +167,7 @@ export default function Reader() {
 
       if (error) throw error;
 
-      setNewNote("");
-      setSelectedText(null);
-      refetchNotes();
-      
-      // Apply new highlight immediately with acrossElements
+      // Apply new highlight immediately
       if (markInstance.current) {
         console.log("Marking text:", selectedText);
         markInstance.current.mark(selectedText, {
@@ -151,6 +177,10 @@ export default function Reader() {
         });
       }
 
+      setNewNote("");
+      setSelectedText(null);
+      refetchNotes();
+      
       toast({
         title: "Note added successfully",
         duration: 3000,
@@ -408,6 +438,23 @@ export default function Reader() {
         <ReaderSidebar
           onNoteClick={scrollToText}
           notes={sortedNotes}
+          onEditNote={async (note, newContent) => {
+            try {
+              await updateNote(user, note.id, newContent);
+              refetchNotes();
+              toast({
+                title: "Note updated successfully",
+                duration: 3000,
+              });
+            } catch (error) {
+              toast({
+                title: "Failed to update note",
+                variant: "destructive",
+                duration: 3000,
+              });
+            }
+          }}
+          onDeleteNote={handleDeleteNote}
         />
       )}
     </div>
