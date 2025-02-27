@@ -13,14 +13,24 @@ import { useToast } from "@/hooks/use-toast";
 // Helper function to normalize text for comparison
 const normalizeText = (text: string) => {
   if (!text) return '';
+  // Replace all whitespace (including newlines) with a single space
   return text
-    .trim();
+    .trim()
+    .replace(/\s+/g, ' ');
 };
 
 const findTextPosition = (content: string, searchText: string) => {
-  const normalizedContent = normalizeText(content);
+  // If either content or searchText is empty, return -1
+  if (!content || !searchText) return -1;
+  
+  // Create a temporary div to parse the HTML content
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = content;
+  
+  // Get the text content without HTML tags and index of the highlighted text
+  const flattenedContent = normalizeText(tempDiv.textContent) || '';
   const normalizedSearchText = normalizeText(searchText);
-  return normalizedContent.indexOf(normalizedSearchText);
+  return flattenedContent.indexOf(normalizedSearchText);
 };
 
 export default function Reader() {
@@ -182,21 +192,97 @@ export default function Reader() {
     });
   }, [sortedNotes]);
 
-  const scrollToText = useCallback((text: string) => {
-    if (!contentRef.current || !markInstance.current) return;
-
-    // First ensure highlights are applied
-    applyHighlights();
-
-    // Find the highlight element containing the text
-    const elements = contentRef.current.querySelectorAll('.highlighted-text');
-    for (const element of elements) {
-      if (normalizeText(element.textContent || '') === normalizeText(text)) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        break;
+  const scrollToText = useCallback((text: string, noteId?: string) => {
+    if (!contentRef.current || !documentData?.text_content) return;
+  
+    // If we have a noteId, try to find and scroll to matching highlights first
+    if (noteId) {
+      const elements = document.querySelectorAll(`[data-note-id="${noteId}"]`);
+      if (elements.length > 0) {
+        elements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Add a visual cue
+        elements.forEach(el => el.classList.add('highlighted-text-focus'));
+        setTimeout(() => {
+          elements.forEach(el => el.classList.remove('highlighted-text-focus'));
+        }, 3000);
+        
+        return;
       }
     }
-  }, [applyHighlights]);
+  
+    const normalizedSearchText = normalizeText(text);
+    const normalizedFullText = normalizeText(documentData.text_content);
+    
+    // Try finding an exact match first
+    let position = normalizedFullText.indexOf(normalizedSearchText);
+    
+    // If exact match fails, try a more fuzzy approach for cross-paragraph text
+    if (position < 0) {
+      // Split the search text into words
+      const searchWords = normalizedSearchText.split(' ').filter(word => word.length > 3);
+      
+      // Try to find a sequence of these words in the document
+      if (searchWords.length > 1) {
+        // Look for the first word
+        position = normalizedFullText.indexOf(searchWords[0]);
+        
+        // Check if subsequent words appear within a reasonable distance
+        let found = position >= 0;
+        let lastPos = position;
+        
+        for (let i = 1; i < searchWords.length && found; i++) {
+          const nextPos = normalizedFullText.indexOf(searchWords[i], lastPos);
+          // If the next word is too far away, this isn't our text
+          found = nextPos > lastPos && (nextPos - lastPos) < 100;
+          lastPos = nextPos;
+        }
+        
+        if (!found) position = -1;
+      }
+    }
+    
+    if (position >= 0) {
+      // Calculate the percentage through the document
+      const percentage = position / normalizedFullText.length;
+      
+      // Log for debugging
+      console.log(`Found text at position ${position} (${Math.round(percentage * 100)}% through document)`);
+      
+      // Get the total scrollable height
+      const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+      const viewportHeight = window.innerHeight;
+      
+      // Calculate the target scroll position
+      const targetScrollPosition = (scrollHeight * percentage) - (viewportHeight / 3);
+      
+      // Scroll to the calculated position
+      window.scrollTo({
+        top: Math.max(0, targetScrollPosition),
+        behavior: 'smooth'
+      });
+      
+      // Add a temporary highlight to help locate the text
+      if (markInstance.current) {
+        markInstance.current.unmark({ className: 'temp-highlight' });
+        markInstance.current.mark(normalizedSearchText, {
+          className: 'temp-highlight highlighted-text-focus',
+          separateWordSearch: false,
+          acrossElements: true,
+          accuracy: {
+            value: "partially",
+            limiters: [",", ".", " "]
+          }
+        });
+        
+        setTimeout(() => {
+          markInstance.current?.unmark({ className: 'temp-highlight' });
+        }, 1000);
+      }
+    } else {
+      console.log("Could not find text in document:", normalizedSearchText);
+    }
+  }, [documentData, markInstance]);
 
   // Apply highlights whenever notes or document changes
   useEffect(() => {
