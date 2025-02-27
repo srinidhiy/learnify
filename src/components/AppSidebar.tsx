@@ -1,4 +1,3 @@
-
 import { Book, FileText, Brain, MessageCircle, Save, Bookmark, Plus, BookAIcon } from "lucide-react";
 import {
   Sidebar,
@@ -19,6 +18,8 @@ import { useToast } from "./ui/use-toast";
 import { ScrollArea } from "./ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import { createTopic, getTopics } from "@/lib/supabaseUtils";
+import { cn } from "@/lib/utils";
+import { useTopics } from "@/contexts/TopicsContext";
 
 const menuItems = [
   {
@@ -43,6 +44,7 @@ export function AppSidebar() {
   const [topics, setTopics] = useState([]);
   const [newTopicName, setNewTopicName] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const { selectedTopicIds, toggleTopic, clearTopics } = useTopics();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -54,11 +56,9 @@ export function AppSidebar() {
     fetchTopics();
   }, [user]);
 
-
   const handleAddTopic = async () => {
     try {
       const newTopic = await createTopic(user, newTopicName);
-      console.log('New topic:', newTopic);
       if (newTopic) {
         setTopics((prevTopics) => [...prevTopics, newTopic[0]]);
         setNewTopicName("");
@@ -73,6 +73,10 @@ export function AppSidebar() {
     }
   };
 
+  const handleAllDocumentsClick = () => {
+    clearTopics();
+  };
+
   return (
     <Sidebar>
       <SidebarContent>
@@ -85,13 +89,24 @@ export function AppSidebar() {
               {menuItems.map((subject) => (
                 <SidebarMenuItem key={subject.title}>
                   <SidebarMenuButton asChild>
-                    <Link 
-                      to={subject.url} 
-                      className="folder-tab"
-                    >
-                      <subject.icon className="w-5 h-5" />
-                      <span className="tracking-wide">{subject.title}</span>
-                    </Link>
+                    {subject.title === "All Documents" ? (
+                      <Link 
+                        to={subject.url} 
+                        className="folder-tab"
+                        onClick={handleAllDocumentsClick}
+                      >
+                        <subject.icon className="w-5 h-5" />
+                        <span className="tracking-wide">{subject.title}</span>
+                      </Link>
+                    ) : (
+                      <Link 
+                        to={subject.url} 
+                        className="folder-tab"
+                      >
+                        <subject.icon className="w-5 h-5" />
+                        <span className="tracking-wide">{subject.title}</span>
+                      </Link>
+                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -136,14 +151,15 @@ export function AppSidebar() {
               <SidebarMenu>
                 {topics.map((topic) => (
                   <SidebarMenuItem key={topic.id}>
-                    <SidebarMenuButton asChild>
-                      <Link
-                        to={`/topics/${topic.name.toLowerCase().replace(/\s+/g, '-')}`}
-                        className="folder-tab group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
-                      >
-                        <Book className="h-4 w-4" />
-                        <span>{topic.name}</span>
-                      </Link>
+                    <SidebarMenuButton
+                      onClick={() => toggleTopic(topic.id)}
+                      className={cn(
+                        "folder-tab group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent",
+                        selectedTopicIds.includes(topic.id) && "bg-accent"
+                      )}
+                    >
+                      <Book className="h-4 w-4" />
+                      <span>{topic.name}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}

@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          operationName?: string
+          query?: string
+          variables?: Json
+          extensions?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       documents: {
@@ -17,6 +42,7 @@ export type Database = {
           document_url: string | null
           excerpt: string | null
           id: string
+          site_name: string | null
           status: Database["public"]["Enums"]["document_status"]
           summary: string | null
           text_content: string | null
@@ -32,6 +58,7 @@ export type Database = {
           document_url?: string | null
           excerpt?: string | null
           id?: string
+          site_name?: string | null
           status?: Database["public"]["Enums"]["document_status"]
           summary?: string | null
           text_content?: string | null
@@ -47,6 +74,7 @@ export type Database = {
           document_url?: string | null
           excerpt?: string | null
           id?: string
+          site_name?: string | null
           status?: Database["public"]["Enums"]["document_status"]
           summary?: string | null
           text_content?: string | null
@@ -75,28 +103,43 @@ export type Database = {
       notes: {
         Row: {
           content: string
+          context_hash: string | null
           created_at: string
           document_id: string
+          end_offset: number | null
           id: string
           referenced_text: string | null
+          selection_id: string | null
+          selection_path: Json | null
+          start_offset: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
           content: string
+          context_hash?: string | null
           created_at?: string
           document_id: string
+          end_offset?: number | null
           id?: string
           referenced_text?: string | null
+          selection_id?: string | null
+          selection_path?: Json | null
+          start_offset?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
           content?: string
+          context_hash?: string | null
           created_at?: string
           document_id?: string
+          end_offset?: number | null
           id?: string
           referenced_text?: string | null
+          selection_id?: string | null
+          selection_path?: Json | null
+          start_offset?: number | null
           updated_at?: string
           user_id?: string
         }
@@ -292,3 +335,4 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
     ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+

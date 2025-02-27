@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +13,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AuthGuard } from "./components/AuthGuard";
+import { TopicsProvider } from "./contexts/TopicsContext";
 
 const queryClient = new QueryClient();
 
@@ -23,27 +23,29 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <AuthProvider>
-          <SidebarProvider>
-            <Routes>
-              <Route
-                path="/auth"
-                element={<AuthGuard type="auth"><AuthPage /></AuthGuard>}
-              />
-              <Route
-                path="/onboarding"
-                element={<AuthGuard type="onboarding"><OnboardingPage /></AuthGuard>}
-              />
-              <Route
-                path="/reader/:documentId"
-                element={<AuthGuard type="authenticated"><Reader /></AuthGuard>}
-              />
-              <Route
-                path="/*"
-                element={<AuthGuard type="authenticated"><MainLayout><Documents /></MainLayout></AuthGuard>}
-              />
-            </Routes>
-            <Toaster />
-          </SidebarProvider>
+            <TopicsProvider>
+              <SidebarProvider>
+                <Routes>
+                  <Route
+                    path="/auth"
+                    element={<AuthGuard type="auth"><AuthPage /></AuthGuard>}
+                  />
+                  <Route
+                    path="/onboarding"
+                    element={<AuthGuard type="onboarding"><OnboardingPage /></AuthGuard>}
+                  />
+                  <Route
+                    path="/reader/:documentId"
+                    element={<AuthGuard type="authenticated"><Reader /></AuthGuard>}
+                  />
+                  <Route
+                    path="/*"
+                    element={<AuthGuard type="authenticated"><MainLayout><Documents /></MainLayout></AuthGuard>}
+                  />
+                </Routes>
+                <Toaster />
+              </SidebarProvider>
+            </TopicsProvider>
           </AuthProvider>
         </TooltipProvider>
       </QueryClientProvider>

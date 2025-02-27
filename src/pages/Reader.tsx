@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Highlighter, Loader2, Minus, Notebook, Plus } from "lucide-react";
+import { Highlighter, Loader2, Minus, Notebook, Plus, CheckCircle } from "lucide-react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
@@ -9,18 +9,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getDocument, getNotes, deleteNote, updateNote } from "@/lib/supabaseUtils";
 import Mark from 'mark.js';
 import { useToast } from "@/hooks/use-toast";
-
-interface Note {
-  id: string;
-  content: string;
-  referenced_text: string | null;
-  created_at: string;
-  document_id: string;
-  user_id: string;
-  selection_id?: string;
-  start_offset?: number;
-  end_offset?: number;
-}
 
 // Helper function to normalize text for comparison
 const normalizeText = (text: string) => {
@@ -57,8 +45,10 @@ export default function Reader() {
   const [popupType, setPopupType] = useState<"select" | "note">("select");
   const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
   const [selectedText, setSelectedText] = useState<string | null>(null);
+  const [hasReachedEnd, setHasReachedEnd] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const markInstance = useRef<Mark | null>(null);
+  const endOfContentRef = useRef<HTMLDivElement>(null);
 
   const { data: notes, refetch: refetchNotes } = useQuery({
     queryKey: ['notes', documentId],
@@ -319,6 +309,64 @@ export default function Reader() {
     applyHighlights();
   }, [applyHighlights, documentData?.content]);
 
+  // Update document status
+  const updateDocumentStatus = useCallback(async (status: 'unread' | 'in_progress' | 'completed') => {
+    if (!user || !documentId) return;
+    console.log("Updating status to:", status);
+
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .update({ status })
+        .eq('id', documentId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setDocumentData(prev => prev ? { ...prev, status } : null);
+    } catch (error) {
+      console.error('Error updating document status:', error);
+    }
+  }, [user, documentId]);
+
+  // Track reading progress using Intersection Observer
+  useEffect(() => {
+    if (!endOfContentRef.current || !documentData) return;
+
+    // Only observe if document isn't already completed
+    if (documentData.status === 'completed') return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // Only mark as completed if we're scrolling down to the end
+          if (entry.isIntersecting && !hasReachedEnd && entry.boundingClientRect.y > 0) {
+            console.log("Reached end of document by scrolling");
+            setHasReachedEnd(true);
+            updateDocumentStatus('completed');
+          }
+        });
+      },
+      {
+        threshold: 1.0,
+        rootMargin: '0px',
+      }
+    );
+
+    observer.observe(endOfContentRef.current);
+    return () => observer.disconnect();
+  }, [hasReachedEnd, updateDocumentStatus, documentData]);
+
+  // Separate effect for initial status
+  useEffect(() => {
+    if (documentData?.status === 'unread') {
+      updateDocumentStatus('in_progress');
+    } else if (documentData?.status === 'completed') {
+      setHasReachedEnd(true);
+    }
+  }, [documentData?.status, updateDocumentStatus]);
+
   return (
     <div className="min-h-screen bg-background flex">
       <div className={`flex-1 p-6 md:p-12 mr-80`}>
@@ -375,6 +423,7 @@ export default function Reader() {
               ref={contentRef}
               dangerouslySetInnerHTML={{ __html: documentData?.content || '' }}
             />
+            <div ref={endOfContentRef} className="h-1" />
           </article>
         </div>
       </div>
