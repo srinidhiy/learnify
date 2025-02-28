@@ -29,7 +29,7 @@ const menuItems = [
   },
   {
     title: "Chat",
-    url: "/flashcards",
+    url: "/chat",
     icon: MessageCircle,
   },
   {

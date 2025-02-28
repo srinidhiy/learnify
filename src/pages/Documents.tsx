@@ -48,7 +48,7 @@ const Documents = () => {
       return false;
     }
     // Filter out archived documents
-    if (doc.archived) {
+    if (doc.status == "completed") {
       return false;
     }
     // TODO: Add semantic search when implemented
@@ -90,21 +90,6 @@ const Documents = () => {
             <BookOpen className="w-5 h-5 text-muted-foreground" />
           </div>
         );
-    }
-  };
-
-  const handleArchive = async (docId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent navigation when clicking archive button
-    try {
-      // await supabase
-      //   .from('documents')
-      //   .update({ archived: true })
-      //   .eq('id', docId);
-      
-      setDocuments(docs => docs.filter(d => d.id !== docId));
-      
-    } catch (error) {
-      console.error('Error archiving document:', error);
     }
   };
 
@@ -151,19 +136,7 @@ const Documents = () => {
                   <span className="bg-accent rounded-md px-2 py-0.5">{getTopicName(doc.topic_id)}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                {doc.status === 'completed' && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => handleArchive(doc.id, e)}
-                  >
-                    <Archive className="w-4 h-4" />
-                  </Button>
-                )}
-                {getStatusIcon(doc.status)}
-              </div>
+              {getStatusIcon(doc.status)}
             </div>
           </Card>
         ))}

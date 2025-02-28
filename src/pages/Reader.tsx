@@ -372,7 +372,7 @@ export default function Reader() {
       <div className={`flex-1 p-6 md:p-12 mr-80`}>
         <div className="w-3/4 mx-auto">
           <div className="flex items-center justify-between mb-8 sticky top-0 bg-background z-10 p-2">
-            <Button variant="ghost" onClick={() => navigate('/')}>
+            <Button variant="ghost" onClick={() => navigate(documentData.status === "completed" ? '/archive' : '/')}>
               ← Back
             </Button>
             <div className="flex items-center gap-2">

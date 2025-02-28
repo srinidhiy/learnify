@@ -14,6 +14,7 @@ import { supabase } from "./integrations/supabase/client";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AuthGuard } from "./components/AuthGuard";
 import { TopicsProvider } from "./contexts/TopicsContext";
+import Archive from "./pages/Archive";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,10 @@ function App() {
                   <Route
                     path="/reader/:documentId"
                     element={<AuthGuard type="authenticated"><Reader /></AuthGuard>}
+                  />
+                  <Route
+                    path="/archive"
+                    element={<AuthGuard type="authenticated"><MainLayout><Archive /></MainLayout></AuthGuard>}
                   />
                   <Route
                     path="/*"
