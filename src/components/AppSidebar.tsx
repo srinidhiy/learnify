@@ -1,4 +1,4 @@
-import { Book, FileText, Brain, MessageCircle, Save, Bookmark, Plus, BookAIcon } from "lucide-react";
+import { Book, FileText, Brain, MessageCircle, Save, Bookmark, Plus, BookAIcon, Notebook } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -36,6 +36,11 @@ const menuItems = [
     title: "Archive",
     url: "/archive",
     icon: Bookmark,
+  },
+  {
+    title: "Notes",
+    url: "/notes",
+    icon: Notebook,
   },
 ];
 

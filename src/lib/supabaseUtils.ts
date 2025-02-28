@@ -218,6 +218,26 @@ export const getNotes = async (user: User, documentId: string) => {
     return null;
 }
 
+export const getAllNotes = async (user: User) => {
+    const { data: notes, error } = await supabase
+        .from('notes')
+        .select(`
+            *,
+            documents:document_id (
+                topic_id
+            )
+        `)
+        .eq('user_id', user.id);
+    
+    if (error) {
+        console.error("Error fetching notes:", error);
+        throw error;
+    }
+    if (notes) {
+        return notes;
+    }
+}
+
 export const deleteNote = async (user: User, documentId: string, noteId: string) => {
     const { error } = await supabase
         .from('notes')

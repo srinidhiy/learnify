@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Highlighter, Loader2, Minus, Notebook, Plus, CheckCircle } from "lucide-react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { ReaderSidebar } from "@/components/ReaderSidebar";
@@ -49,6 +49,8 @@ export default function Reader() {
   const contentRef = useRef<HTMLDivElement>(null);
   const markInstance = useRef<Mark | null>(null);
   const endOfContentRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const { scrollToText } = location.state || {};
 
   const { data: notes, refetch: refetchNotes } = useQuery({
     queryKey: ['notes', documentId],
@@ -212,7 +214,7 @@ export default function Reader() {
     });
   }, [sortedNotes]);
 
-  const scrollToText = useCallback((text: string, noteId?: string) => {
+  const scrollToTextInDocument = useCallback((text: string, noteId?: string) => {
     if (!contentRef.current || !documentData?.text_content) return;
   
     // If we have a noteId, try to find and scroll to matching highlights first
@@ -310,7 +312,7 @@ export default function Reader() {
   }, [applyHighlights, documentData?.content]);
 
   // Update document status
-  const updateDocumentStatus = useCallback(async (status: 'unread' | 'in_progress' | 'completed') => {
+  const updateDocumentStatus = useCallback(async (status: 'unread' | 'in_progress' | 'completed' | 'archived') => {
     if (!user || !documentId) return;
     console.log("Updating status to:", status);
 
@@ -335,7 +337,7 @@ export default function Reader() {
     if (!endOfContentRef.current || !documentData) return;
 
     // Only observe if document isn't already completed
-    if (documentData.status === 'completed') return;
+    if (documentData.status === 'completed' || documentData.status === 'archived') return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -367,12 +369,31 @@ export default function Reader() {
     }
   }, [documentData?.status, updateDocumentStatus]);
 
+  useEffect(() => {
+    if (!scrollToText || !documentData?.content) return;
+
+    let attempts = 0;
+    const maxAttempts = 5;
+    
+    const tryScroll = () => {
+      if (contentRef.current && window.document.querySelector('.highlighted-text')) {
+        const text = normalizeText(scrollToText);
+        scrollToTextInDocument(text);
+      } else if (attempts < maxAttempts) {
+        attempts++;
+        setTimeout(tryScroll, 200);
+      }
+    };
+
+    setTimeout(tryScroll, 500);
+  }, [documentData?.content, scrollToText, scrollToTextInDocument]);
+
   return (
     <div className="min-h-screen bg-background flex">
       <div className={`flex-1 p-6 md:p-12 mr-80`}>
         <div className="w-3/4 mx-auto">
           <div className="flex items-center justify-between mb-8 sticky top-0 bg-background z-10 p-2">
-            <Button variant="ghost" onClick={() => navigate(documentData.status === "completed" ? '/archive' : '/')}>
+            <Button variant="ghost" onClick={() => navigate(-1)}>
               ← Back
             </Button>
             <div className="flex items-center gap-2">
@@ -485,7 +506,7 @@ export default function Reader() {
 
       {documentId && (
         <ReaderSidebar
-          onNoteClick={scrollToText}
+          onNoteClick={scrollToTextInDocument}
           notes={sortedNotes}
           onEditNote={async (note, newContent) => {
             try {

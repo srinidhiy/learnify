@@ -19,8 +19,7 @@ const Archive = () => {
     useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
-      const [userProfile, userDocs, userTopics] = await Promise.all([
-        getUser(user),
+      const [userDocs, userTopics] = await Promise.all([
         getDocuments(user),
         getTopics(user)
       ]);
@@ -34,7 +33,7 @@ const Archive = () => {
         if (selectedTopicIds.length > 0 && !selectedTopicIds.includes(doc.topic_id)) {
             return false;
         }
-        if (doc.status != "completed") {
+        if (doc.status != "archived") {
             return false;
         }
         return true;

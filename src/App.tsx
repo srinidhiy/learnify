@@ -15,6 +15,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { AuthGuard } from "./components/AuthGuard";
 import { TopicsProvider } from "./contexts/TopicsContext";
 import Archive from "./pages/Archive";
+import Notes from "./pages/Notes";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,10 @@ function App() {
                   <Route
                     path="/archive"
                     element={<AuthGuard type="authenticated"><MainLayout><Archive /></MainLayout></AuthGuard>}
+                  />
+                  <Route
+                    path="/notes"
+                    element={<AuthGuard type="authenticated"><MainLayout><Notes /></MainLayout></AuthGuard>}
                   />
                   <Route
                     path="/*"

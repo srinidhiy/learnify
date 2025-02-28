@@ -48,16 +48,31 @@ const Documents = () => {
       return false;
     }
     // Filter out archived documents
-    if (doc.status == "completed") {
+    if (doc.status == "archived") {
       return false;
     }
     // TODO: Add semantic search when implemented
     return true;
-  });
+  }).sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
   const getTopicName = (topicId: string) => {
     const topic = topics.find(t => t.id === topicId);
     return topic?.name || '';
+  };
+
+  const handleArchive = async (docId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation when clicking archive button
+    try {
+      await supabase
+        .from('documents')
+        .update({ status: "archived" })
+        .eq('id', docId);
+      
+      setDocuments(docs => docs.filter(d => d.id !== docId));
+      
+    } catch (error) {
+      console.error('Error archiving document:', error);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -136,7 +151,19 @@ const Documents = () => {
                   <span className="bg-accent rounded-md px-2 py-0.5">{getTopicName(doc.topic_id)}</span>
                 </div>
               </div>
-              {getStatusIcon(doc.status)}
+              <div className="flex items-center gap-3">
+                {doc.status === 'completed' && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => handleArchive(doc.id, e)}
+                  >
+                    <Archive className="w-4 h-4" />
+                  </Button>
+                )}
+                {getStatusIcon(doc.status)}
+              </div>
             </div>
           </Card>
         ))}
