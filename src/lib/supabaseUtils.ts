@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { generateEmbedding, generateSummary } from './openaiUtils';
 
 export const getUser = async (user: User) => {
     const { data: profile, error } = await supabase
@@ -271,4 +272,36 @@ export const updateNote = async (user: User, noteId: string, content: string) =>
     }
 
     return true;
+};
+
+export const searchDocuments = async (user: User, query: string) => {
+    const embedding = await generateEmbedding(query);
+    
+    const { data: results, error } = await supabase
+        .rpc('match_documents', {
+            query_embedding: embedding,
+            match_threshold: 0.7,
+            match_count: 10
+        });
+
+    if (error) throw error;
+    return results;
+};
+
+export const updateDocumentWithAI = async (user: User, documentId: string, content: string) => {
+    const [embedding, summary] = await Promise.all([
+        generateEmbedding(content),
+        generateSummary(content)
+    ]);
+
+    const { error } = await supabase
+        .from('documents')
+        .update({ 
+            embedding,
+            summary: summary
+        })
+        .eq('id', documentId)
+        .eq('user_id', user.id);
+
+    if (error) throw error;
 };

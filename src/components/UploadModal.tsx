@@ -5,7 +5,7 @@ import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Upload, Link as LinkIcon, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { createDocument, getTopics } from "@/lib/supabaseUtils";
+import { createDocument, getTopics, updateDocumentWithAI } from "@/lib/supabaseUtils";
 import { toast } from "@/hooks/use-toast";
 
 export function UploadModal({ onDocumentUpload }) {
@@ -43,6 +43,7 @@ export function UploadModal({ onDocumentUpload }) {
     try {
       const docTopic = selectedTopic === "new_topic" ? newTopicName : selectedTopic;
       const newDocument = await createDocument(user, { document_url: url, topic: docTopic });
+      await updateDocumentWithAI(user, newDocument[0].id, newDocument[0].content);
       onDocumentUpload(newDocument[0]);
     } catch (error) {
       err = true;

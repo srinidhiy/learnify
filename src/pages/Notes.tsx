@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTopics } from "@/contexts/TopicsContext";
 import { getAllNotes, getDocuments, getTopics } from "@/lib/supabaseUtils";
@@ -12,6 +13,7 @@ const Notes = () => {
   const { user } = useAuth();
   const { selectedTopicIds } = useTopics();
   const [topics, setTopics] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   
   useEffect(() => {
     const fetchData = async () => {
@@ -50,7 +52,12 @@ const Notes = () => {
           Click on a note to go to the referenced text in the document.
         </p>
       </div>
-
+      <Input
+          placeholder="Search notes..."
+          className="w-64"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       {filteredNotes.length === 0 && (
         <div className="text-center text-muted-foreground">
           No notes found

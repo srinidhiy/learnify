@@ -227,7 +227,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      match_documents: {
+        Args: {
+          query_embedding: number[];
+          match_threshold: number;
+          match_count: number;
+        };
+        Returns: {
+          id: string;
+          content: string;
+          similarity: number;
+        }[];
+      };
     }
     Enums: {
       document_status: "unread" | "in_progress" | "completed" | "archived"
