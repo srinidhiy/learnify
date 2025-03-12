@@ -288,6 +288,36 @@ export const searchDocuments = async (user: User, query: string) => {
     return results;
 };
 
+export const updateDocument = async (user: User, documentId: string, updates: any) => {
+    const { error } = await supabase
+        .from('documents')
+        .update(updates)
+        .eq('id', documentId)
+        .eq('user_id', user.id);
+
+    if (error) {
+        console.error('Error updating document:', error);
+        throw error;
+    }
+
+    return true;
+}
+
+export const deleteDocument = async (user: User, documentId: string) => {
+    const { error } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', documentId)
+        .eq('user_id', user.id);
+
+    if (error) {
+        console.error('Error deleting document:', error);
+        throw error;
+    }
+
+    return true;
+}
+
 export const updateDocumentWithAI = async (user: User, documentId: string, content: string) => {
     const [embedding, summary] = await Promise.all([
         generateEmbedding(content),

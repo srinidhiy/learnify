@@ -3,24 +3,28 @@ import { Card } from "@/components/ui/card";
 import { UploadModal } from "@/components/UploadModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from '@/integrations/supabase/client';
-import { getDocuments, getUser } from "@/lib/supabaseUtils";
+import { deleteDocument, getDocuments, getUser, updateDocument } from "@/lib/supabaseUtils";
 import { useEffect, useState } from "react";
-import { Archive, BookOpen, Clock, CheckCircle } from "lucide-react";
+import { Archive, BookOpen, Clock, CheckCircle, MoreVertical, Pencil, Trash } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useTopics } from "@/contexts/TopicsContext";
 import { getTopics } from "@/lib/supabaseUtils";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { toast } from "@/hooks/use-toast";
 
 const Documents = () => {
   const [signedInUser, setSignedInUser] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [topics, setTopics] = useState([]);
+  const [editingDocId, setEditingDocId] = useState(null);
+  const [editedTitle, setEditedTitle] = useState('');
   const navigate = useNavigate();
   const { user } = useAuth();
   const { selectedTopicIds } = useTopics();
-  const [topics, setTopics] = useState([]);
-
+  
   if (!user) return null;
 
   useEffect(() => {
@@ -75,6 +79,60 @@ const Documents = () => {
     }
   };
 
+  const handleStartEdit = (doc) => {
+    setEditingDocId(doc.id);
+    setEditedTitle(doc.title);
+  };
+
+  const handleSaveTitle = async (docId) => {
+    try {
+      await updateDocument(user, docId, { title: editedTitle });
+      
+      // Update the document in the local state
+      setDocuments(prevDocs => 
+        prevDocs.map(doc => 
+          doc.id === docId ? { ...doc, title: editedTitle } : doc
+        )
+      );
+      
+      toast({
+        title: "Success",
+        description: "Document title updated",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update document title",
+        variant: "destructive",
+      });
+    } finally {
+      setEditingDocId(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingDocId(null);
+  };
+
+  const handleDeleteDocument = async (docId) => {
+    try {
+      await deleteDocument(user, docId);
+      
+      setDocuments(docs => docs.filter(d => d.id !== docId));
+      
+      toast({
+        title: "Success",
+        description: "Document deleted",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete document",
+        variant: "destructive",
+      });
+    }
+  }
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'unread':
@@ -119,7 +177,7 @@ const Documents = () => {
       </div>
       <Input
           placeholder="Search documents..."
-          className="w-64"
+          className="w-full h-14"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -133,11 +191,43 @@ const Documents = () => {
           <Card 
             key={doc.id} 
             className="p-6 hover:bg-accent/5 cursor-pointer transition-colors group"
-            onClick={() => navigate(`/reader/${doc.id}`)}
           >
             <div className="flex justify-between items-start">
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold">{doc.title}</h3>
+              <div className="space-y-2" onClick={() => navigate(`/reader/${doc.id}`)}>
+                {editingDocId === doc.id ? (
+                  <div className="space-y-2">
+                    <Input
+                      value={editedTitle}
+                      onChange={(e) => setEditedTitle(e.target.value)}
+                      className="text-lg font-semibold w-full"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={(e) => {
+                          handleSaveTitle(doc.id)
+                          e.stopPropagation();
+                        }}
+                      >
+                        Save
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={(e) => {
+                          handleCancelEdit();
+                          e.stopPropagation();
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <h3 className="text-lg font-semibold">{doc.title}</h3>
+                )}
                 {doc.byline && (
                   <p className="text-sm text-muted-foreground">{doc.byline}</p>
                 )}
@@ -152,18 +242,44 @@ const Documents = () => {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                {doc.status === 'completed' && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => handleArchive(doc.id, e)}
-                  >
-                    <Archive className="w-4 h-4" />
-                  </Button>
-                )}
-                {getStatusIcon(doc.status)}
-              </div>
+                <div className="flex items-center gap-3">
+                  {doc.status === 'completed' && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => handleArchive(doc.id, e)}
+                    >
+                      <Archive className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {getStatusIcon(doc.status)}
+                </div>
+                  <div className=" right-2 top-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                        onClick={() => handleStartEdit(doc)}
+                        >
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-destructive"
+                          onClick={() => handleDeleteDocument(doc.id)}
+                        >
+                          <Trash className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
             </div>
           </Card>
         ))}

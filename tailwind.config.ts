@@ -20,6 +20,8 @@ export default {
     extend: {
       fontFamily: {
         brutalist: ["Space Mono", "monospace"],
+        sansReader: ["Noto Sans", "ui-sans-serif", "sans-serif"],
+        serifReader: ["Lora", "ui-serif", "serif"],
       },
       colors: {
         border: "hsl(var(--border))",

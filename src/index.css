@@ -40,7 +40,7 @@
 
 @layer base {
   * {
-    @apply border-border font-brutalist;
+    @apply border-border font-serifReader;
   }
 
   body {
