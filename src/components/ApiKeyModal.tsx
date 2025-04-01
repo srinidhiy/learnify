@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -11,6 +11,13 @@ export function ApiKeyModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [apiKey, setApiKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [hasApiKey, setHasApiKey] = useState(false);
+
+  // Check if API key exists on component mount
+  useEffect(() => {
+    const savedApiKey = localStorage.getItem("openai_api_key");
+    setHasApiKey(!!savedApiKey);
+  }, []);
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
@@ -38,6 +45,7 @@ export function ApiKeyModal() {
         description: "Your OpenAI API key has been saved successfully.",
       });
       
+      setHasApiKey(true);
       setIsOpen(false);
     } catch (error) {
       toast({
@@ -49,6 +57,11 @@ export function ApiKeyModal() {
       setIsLoading(false);
     }
   };
+
+  // If API key is already set, don't render the button
+  if (hasApiKey) {
+    return null;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
