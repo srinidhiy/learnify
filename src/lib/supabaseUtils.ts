@@ -310,7 +310,7 @@ export const searchDocuments = async (user: User, query: string) => {
     
     const { data: results, error } = await supabase
         .rpc('match_documents', {
-            query_embedding: embedding,
+            query_embedding: JSON.stringify(embedding),
             match_threshold: 0.1,
             match_count: 10
         });
@@ -321,22 +321,25 @@ export const searchDocuments = async (user: User, query: string) => {
 };
 
 export const updateDocumentWithAI = async (user: User, documentId: string, content: string) => {
-    const [embedding, summary] = await Promise.all([
-        generateEmbedding(content),
-        generateSummary(content)
-    ]);
+    try {
+        const embedding = await generateEmbedding(content);
+        const summary = await generateSummary(content);
+        
+        const { error } = await supabase
+            .from('documents')
+            .update({ 
+                embedding: JSON.stringify(embedding),
+                summary: summary
+            })
+            .eq('id', documentId)
+            .eq('user_id', user.id);
 
-    const { error } = await supabase
-        .from('documents')
-        .update({ 
-            embedding,
-            summary: summary
-        })
-        .eq('id', documentId)
-        .eq('user_id', user.id);
-
-    if (error) {
-        console.log('Error updating document with AI:', error);
+        if (error) {
+            console.log('Error updating document with AI:', error);
+            throw error;
+        }
+    } catch (error) {
+        console.error('Error in updateDocumentWithAI:', error);
         throw error;
     }
 };

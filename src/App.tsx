@@ -1,5 +1,5 @@
+
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -9,17 +9,26 @@ import AuthPage from "./pages/Auth";
 import OnboardingPage from "./pages/Onboarding";
 import Reader from "./pages/Reader";
 import { SidebarProvider } from "./components/ui/sidebar";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { supabase } from "./integrations/supabase/client";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AuthGuard } from "./components/AuthGuard";
 import { TopicsProvider } from "./contexts/TopicsContext";
 import Archive from "./pages/Archive";
 import Notes from "./pages/Notes";
+import { setOpenAIApiKey } from "./lib/openaiUtils";
 
 const queryClient = new QueryClient();
 
 function App() {
+  // Initialize OpenAI API key from localStorage if available
+  useEffect(() => {
+    const savedApiKey = localStorage.getItem("openai_api_key");
+    if (savedApiKey) {
+      setOpenAIApiKey(savedApiKey);
+    }
+  }, []);
+
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
