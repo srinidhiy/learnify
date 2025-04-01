@@ -1,16 +1,16 @@
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { UploadModal } from "@/components/UploadModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from '@/integrations/supabase/client';
-import { deleteDocument, getDocuments, getUser, searchDocuments, updateDocument } from "@/lib/supabaseUtils";
+import { deleteDocument, getDocuments, getUser, searchDocuments, updateDocument, getTopics } from "@/lib/supabaseUtils";
 import { useEffect, useState } from "react";
 import { Archive, BookOpen, Clock, CheckCircle, MoreVertical, Pencil, Trash } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useTopics } from "@/contexts/TopicsContext";
-import { getTopics } from "@/lib/supabaseUtils";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
 
@@ -18,9 +18,11 @@ const Documents = () => {
   const [signedInUser, setSignedInUser] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState(null);
   const [topics, setTopics] = useState([]);
   const [editingDocId, setEditingDocId] = useState(null);
   const [editedTitle, setEditedTitle] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { selectedTopicIds } = useTopics();
@@ -46,16 +48,48 @@ const Documents = () => {
     setDocuments((prevDocs) => [...prevDocs, newDocument]);
   };
 
-  const filteredDocuments = documents.filter(doc => {
+  // Handle search submission
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults(null);
+      return;
+    }
+    
+    setIsSearching(true);
+    try {
+      const results = await searchDocuments(user, searchQuery);
+      setSearchResults(results);
+    } catch (error) {
+      console.error("Search error:", error);
+      toast({
+        title: "Search Failed",
+        description: "There was an error searching documents.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Clear search results and query
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchResults(null);
+  };
+
+  // Determine which documents to display
+  const displayedDocuments = searchResults || documents;
+
+  // Apply additional filters
+  const filteredDocuments = displayedDocuments.filter(doc => {
     // Filter by selected topics
     if (selectedTopicIds.length > 0 && !selectedTopicIds.includes(doc.topic_id)) {
       return false;
     }
-    // Filter out archived documents
-    if (doc.status == "archived") {
+    // Filter out archived documents (unless we're showing search results)
+    if (!searchResults && doc.status === "archived") {
       return false;
     }
-    // TODO: Add semantic search when implemented
     return true;
   }).sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
@@ -181,11 +215,46 @@ const Documents = () => {
           className="w-full h-14"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleSearch();
+            }
+          }}
         />
-        <Button className="h-12 ml-4 bg-accent" onClick={() => {searchDocuments(user, searchQuery)}}>
-          Search
+        <Button 
+          className="h-12 ml-2 bg-accent" 
+          onClick={handleSearch}
+          disabled={isSearching}
+        >
+          {isSearching ? "Searching..." : "Search"}
         </Button>
+        {searchResults && (
+          <Button 
+            className="h-12 ml-2" 
+            variant="outline" 
+            onClick={clearSearch}
+          >
+            Clear
+          </Button>
+        )}
       </div>
+      
+      {searchResults && (
+        <div className="bg-muted p-4 rounded-md flex items-center justify-between">
+          <div>
+            <p className="font-medium">
+              Search results for: <span className="italic">{searchQuery}</span>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Found {searchResults.length} document{searchResults.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <Button variant="outline" onClick={clearSearch}>
+            Clear Search
+          </Button>
+        </div>
+      )}
+      
       <div className="flex flex-col gap-6">
         {filteredDocuments.length === 0 && ( 
           <div className="col-span-3 text-center text-muted-foreground">

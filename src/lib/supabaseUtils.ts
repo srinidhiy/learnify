@@ -306,18 +306,62 @@ export const deleteDocument = async (user: User, documentId: string) => {
 
 export const searchDocuments = async (user: User, query: string) => {
     console.log('Searching for:', query);
+  
+  // Ensure the user has set an API key before attempting to generate embeddings
+  try {
     const embedding = await generateEmbedding(query);
     
+    // Query the database for semantic matches
     const { data: results, error } = await supabase
-        .rpc('match_documents', {
-            query_embedding: JSON.stringify(embedding),
-            match_threshold: 0.1,
-            match_count: 10
-        });
+      .rpc('match_documents', {
+        query_embedding: embedding,
+        match_threshold: 0.1,
+        match_count: 10
+      });
 
-    if (error) throw error;
-    console.log('Search results:', results);
-    return results;
+    if (error) {
+      console.error('Search error:', error);
+      throw error;
+    }
+    
+    console.log('Raw search results:', results);
+    
+    if (!results || results.length === 0) {
+      console.log('No search results found');
+      return [];
+    }
+
+    // For each document in the results, fetch the full document data
+    const documentIds = results.map(result => result.id);
+    
+    // Get the full document records for these IDs
+    const { data: documents, error: docError } = await supabase
+      .from('documents')
+      .select('*')
+      .in('id', documentIds)
+      .eq('user_id', user.id);
+      
+    if (docError) {
+      console.error('Error fetching document details:', docError);
+      throw docError;
+    }
+    
+    // Sort the full documents in the same order as the search results
+    const sortedDocuments = documentIds.map(id => 
+      documents.find(doc => doc.id === id)
+    ).filter(Boolean);
+    
+    console.log('Formatted search results:', sortedDocuments);
+    return sortedDocuments;
+  } catch (error) {
+    console.error('Error during search:', error);
+    toast({
+      title: "Search Error",
+      description: "Please check you have set a valid OpenAI API key in the app settings.",
+      variant: "destructive",
+    });
+    return [];
+  }
 };
 
 export const updateDocumentWithAI = async (user: User, documentId: string, content: string) => {
