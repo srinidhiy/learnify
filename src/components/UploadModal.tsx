@@ -1,9 +1,10 @@
+
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { Upload, Link as LinkIcon, Loader2 } from "lucide-react";
+import { Upload, Link as LinkIcon, Loader2, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { createDocument, getTopics, updateDocumentWithAI } from "@/lib/supabaseUtils";
 import { toast } from "@/hooks/use-toast";
@@ -15,6 +16,7 @@ export function UploadModal({ onDocumentUpload }) {
   const [topics, setTopics] = useState([]);
   const [newTopicName, setNewTopicName] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [file, setFile] = useState(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -32,6 +34,13 @@ export function UploadModal({ onDocumentUpload }) {
       setUrl("");
       setSelectedTopic("");
       setNewTopicName("");
+      setFile(null);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
     }
   };
 
@@ -39,12 +48,33 @@ export function UploadModal({ onDocumentUpload }) {
     e.preventDefault();
     setIsLoading(true);
     let err = false;
-    // Simulate API call
+    
     try {
       const docTopic = selectedTopic === "new_topic" ? newTopicName : selectedTopic;
-      const newDocument = await createDocument(user, { document_url: url, topic: docTopic });
-      await updateDocumentWithAI(user, newDocument[0].id, newDocument[0].content);
-      onDocumentUpload(newDocument[0]);
+      
+      if (!url && !file) {
+        throw new Error("Please provide either a URL or upload a file");
+      }
+      
+      let newDocument;
+      
+      if (url) {
+        newDocument = await createDocument(user, { document_url: url, topic: docTopic });
+      } else if (file) {
+        // In a real implementation, you would handle the file upload here
+        // For now, just treat it as a URL-based document
+        toast({
+          title: "File Upload",
+          description: "File upload functionality is coming soon!",
+          variant: "default",
+        });
+        return;
+      }
+      
+      if (newDocument) {
+        await updateDocumentWithAI(user, newDocument[0].id, newDocument[0].content);
+        onDocumentUpload(newDocument[0]);
+      }
     } catch (error) {
       err = true;
       toast({
@@ -112,11 +142,19 @@ export function UploadModal({ onDocumentUpload }) {
             </div>
           </div>
           
-          
-          
           <div className="space-y-2">
             <label className="text-sm font-medium">Or Upload File</label>
-            <Input type="file" className="cursor-pointer" />
+            <div className="relative">
+              <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input 
+                type="file" 
+                className="cursor-pointer pl-9" 
+                onChange={handleFileChange}
+              />
+            </div>
+            {file && (
+              <p className="text-xs text-muted-foreground">Selected: {file.name}</p>
+            )}
           </div>
           
           <Button type="submit" className="w-full" disabled={isLoading}>
