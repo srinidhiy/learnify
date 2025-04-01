@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { UploadModal } from "@/components/UploadModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from '@/integrations/supabase/client';
-import { deleteDocument, getDocuments, getUser, updateDocument } from "@/lib/supabaseUtils";
+import { deleteDocument, getDocuments, getUser, searchDocuments, updateDocument } from "@/lib/supabaseUtils";
 import { useEffect, useState } from "react";
 import { Archive, BookOpen, Clock, CheckCircle, MoreVertical, Pencil, Trash } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -175,12 +175,17 @@ const Documents = () => {
         <h1 className="text-3xl font-bold">Welcome back, {signedInUser?.full_name}</h1>
         <p className="text-muted-foreground mt-1">Here's what to read today.</p>
       </div>
-      <Input
+      <div className="flex items-center">
+        <Input
           placeholder="Search documents..."
           className="w-full h-14"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
+        <Button className="h-12 ml-4 bg-accent" onClick={() => {searchDocuments(user, searchQuery)}}>
+          Search
+        </Button>
+      </div>
       <div className="flex flex-col gap-6">
         {filteredDocuments.length === 0 && ( 
           <div className="col-span-3 text-center text-muted-foreground">

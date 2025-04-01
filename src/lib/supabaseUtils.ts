@@ -274,20 +274,6 @@ export const updateNote = async (user: User, noteId: string, content: string) =>
     return true;
 };
 
-export const searchDocuments = async (user: User, query: string) => {
-    const embedding = await generateEmbedding(query);
-    
-    const { data: results, error } = await supabase
-        .rpc('match_documents', {
-            query_embedding: embedding,
-            match_threshold: 0.7,
-            match_count: 10
-        });
-
-    if (error) throw error;
-    return results;
-};
-
 export const updateDocument = async (user: User, documentId: string, updates: any) => {
     const { error } = await supabase
         .from('documents')
@@ -318,6 +304,22 @@ export const deleteDocument = async (user: User, documentId: string) => {
     return true;
 }
 
+export const searchDocuments = async (user: User, query: string) => {
+    console.log('Searching for:', query);
+    const embedding = await generateEmbedding(query);
+    
+    const { data: results, error } = await supabase
+        .rpc('match_documents', {
+            query_embedding: embedding,
+            match_threshold: 0.1,
+            match_count: 10
+        });
+
+    if (error) throw error;
+    console.log('Search results:', results);
+    return results;
+};
+
 export const updateDocumentWithAI = async (user: User, documentId: string, content: string) => {
     const [embedding, summary] = await Promise.all([
         generateEmbedding(content),
@@ -333,5 +335,8 @@ export const updateDocumentWithAI = async (user: User, documentId: string, conte
         .eq('id', documentId)
         .eq('user_id', user.id);
 
-    if (error) throw error;
+    if (error) {
+        console.log('Error updating document with AI:', error);
+        throw error;
+    }
 };
