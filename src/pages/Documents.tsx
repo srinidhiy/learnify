@@ -13,6 +13,7 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { useTopics } from "@/contexts/TopicsContext";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
+import { ApiKeyModal } from "@/components/ApiKeyModal";
 
 const Documents = () => {
   const [signedInUser, setSignedInUser] = useState(null);
@@ -203,6 +204,7 @@ const Documents = () => {
   return (
     <div className="space-y-6 pb-12">
       <div className="flex justify-end mb-6">
+        {/* <ApiKeyModal /> */}
         <UploadModal onDocumentUpload={handleDocumentUpload}/>
       </div>
       <div>

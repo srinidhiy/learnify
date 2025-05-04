@@ -4,7 +4,7 @@ import { toast } from "@/hooks/use-toast";
 
 // Initialize OpenAI with optional API key from environment
 // For client-side usage, we'll prompt users to input their API key
-let openaiApiKey: string | undefined = undefined;
+let openaiApiKey: string | undefined = import.meta.env.VITE_OPENAI_API_KEY;
 
 // Function to set the API key at runtime
 export const setOpenAIApiKey = (apiKey: string) => {

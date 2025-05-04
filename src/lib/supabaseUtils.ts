@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { generateEmbedding, generateSummary } from './openaiUtils';
+import { toast } from "@/hooks/use-toast";
 
 export const getUser = async (user: User) => {
     const { data: profile, error } = await supabase
@@ -315,7 +316,7 @@ export const searchDocuments = async (user: User, query: string) => {
     const { data: results, error } = await supabase
       .rpc('match_documents', {
         query_embedding: embedding,
-        match_threshold: 0.1,
+        match_threshold: 0.3,
         match_count: 10
       });
 
@@ -372,7 +373,7 @@ export const updateDocumentWithAI = async (user: User, documentId: string, conte
         const { error } = await supabase
             .from('documents')
             .update({ 
-                embedding: JSON.stringify(embedding),
+                embedding: embedding,
                 summary: summary
             })
             .eq('id', documentId)
@@ -386,4 +387,63 @@ export const updateDocumentWithAI = async (user: User, documentId: string, conte
         console.error('Error in updateDocumentWithAI:', error);
         throw error;
     }
+};
+
+export const searchNotes = async (user: User, query: string) => {
+    console.log('Searching for:', query);
+  
+  // Ensure the user has set an API key before attempting to generate embeddings
+  try {
+    const embedding = await generateEmbedding(query);
+    console.log('Generated embedding:', embedding);
+    
+    // Query the database for semantic matches
+    const { data: results, error } = await supabase
+      .rpc('match_notes', {
+        query_embedding: embedding
+      });
+
+    if (error) {
+      console.error('Search error:', error);
+      throw error;
+    }
+    
+    console.log('Raw search results:', results);
+    
+    if (!results || results.length === 0) {
+      console.log('No search results found');
+      return [];
+    }
+
+    // For each document in the results, fetch the full document data
+    const noteIds = results.map(result => result.id);
+    
+    // Get the full document records for these IDs
+    const { data: notes, error: noteError } = await supabase
+      .from('notes')
+      .select('*')
+      .in('id', noteIds)
+      .eq('user_id', user.id);
+      
+    if (noteError) {
+      console.error('Error fetching document details:', noteError);
+      throw noteError;
+    }
+    
+    // Sort the full documents in the same order as the search results
+    const sortedNotes = noteIds.map(id => 
+      notes.find(note => note.id === id)
+    ).filter(Boolean);
+    
+    console.log('Formatted search results:', sortedNotes);
+    return sortedNotes;
+  } catch (error) {
+    console.error('Error during search:', error);
+    toast({
+      title: "Search Error",
+      description: "Please check you have set a valid OpenAI API key in the app settings.",
+      variant: "destructive",
+    });
+    return [];
+  }
 };

@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getDocument, getNotes, deleteNote, updateNote } from "@/lib/supabaseUtils";
 import Mark from 'mark.js';
 import { useToast } from "@/hooks/use-toast";
+import { generateEmbedding } from "@/lib/openaiUtils";
 
 // Helper function to normalize text for comparison
 const normalizeText = (text: string) => {
@@ -148,13 +149,18 @@ export default function Reader() {
     
     try {
       // Create new note
+      const embedding = await generateEmbedding(newNote)
+      if (!embedding) {
+        throw new Error("Failed to generate embedding");
+      }
       const { error } = await supabase
         .from('notes')
         .insert({
           content: newNote,
           document_id: documentId,
           user_id: user.id,
-          referenced_text: selectedText
+          referenced_text: selectedText,
+          embedding: embedding,
         });
 
       if (error) throw error;

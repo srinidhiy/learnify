@@ -4,13 +4,12 @@ import { ApiKeyModal } from "./ApiKeyModal";
 
 export const MainLayout = ({ children }) => {
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <AppSidebar />
-      <div className="flex-1 overflow-auto">
-        <div className="container mx-auto px-4 py-8 relative">
-          <div className="absolute top-4 right-4">
-            <ApiKeyModal />
-          </div>
+    <div className="min-h-screen flex w-full bg-primary relative">
+       <div className="fixed top-0 bottom-0 left-0">
+         <AppSidebar />
+       </div>
+       <div className="flex-1 flex flex-col ml-[260px]">
+         <div className="flex-1 p-6">
           {children}
         </div>
       </div>

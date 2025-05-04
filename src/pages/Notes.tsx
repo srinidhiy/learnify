@@ -1,8 +1,10 @@
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTopics } from "@/contexts/TopicsContext";
-import { getAllNotes, getDocuments, getTopics } from "@/lib/supabaseUtils";
+import { toast } from "@/hooks/use-toast";
+import { getAllNotes, getDocuments, getTopics, searchDocuments, searchNotes } from "@/lib/supabaseUtils";
 import { ArrowUpRight, Quote } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -14,7 +16,9 @@ const Notes = () => {
   const { selectedTopicIds } = useTopics();
   const [topics, setTopics] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  
+  const [searchResults, setSearchResults] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
@@ -28,7 +32,39 @@ const Notes = () => {
     fetchData();
   }, [user]);
 
-  const filteredNotes = notes.filter(note => {
+  // Handle search submission
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults(null);
+      return;
+    }
+    
+    setIsSearching(true);
+    try {
+      const results = await searchNotes(user, searchQuery);
+      setSearchResults(results);
+    } catch (error) {
+      console.error("Search error:", error);
+      toast({
+        title: "Search Failed",
+        description: "There was an error searching notes.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Clear search results and query
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchResults(null);
+  };
+
+  // Determine which documents to display
+  const displayedNotes = searchResults || notes;
+
+  const filteredNotes = displayedNotes.filter(note => {
     if (selectedTopicIds.length === 0) return true;
     return selectedTopicIds.includes(note.documents?.topic_id);
   }).sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
@@ -52,12 +88,35 @@ const Notes = () => {
           Click on a note to go to the referenced text in the document.
         </p>
       </div>
-      <Input
+      <div className="flex items-center">
+        <Input
           placeholder="Search notes..."
-          className="w-64"
+          className="w-full h-14"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleSearch();
+            }
+          }}
         />
+        <Button 
+          className="h-12 ml-2 bg-accent" 
+          onClick={handleSearch}
+          disabled={isSearching}
+        >
+          {isSearching ? "Searching..." : "Search"}
+        </Button>
+        {searchResults && (
+          <Button 
+            className="h-12 ml-2" 
+            variant="outline" 
+            onClick={clearSearch}
+          >
+            Clear
+          </Button>
+        )}
+      </div>
       {filteredNotes.length === 0 && (
         <div className="text-center text-muted-foreground">
           No notes found
