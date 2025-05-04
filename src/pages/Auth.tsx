@@ -24,7 +24,7 @@ const AuthPage = () => {
         </div>
         <Auth
           supabaseClient={supabase}
-          providers={["google", "github", "apple"]}
+          providers={["google"]}
           redirectTo={window.location.origin}
           appearance={{
             theme: ThemeSupa,
